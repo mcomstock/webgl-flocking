@@ -23,7 +23,7 @@ void main() {
 
     vec2 v = vec2(v_tex.r, v_tex.g);
     vec2 x = vec2(x_tex.r, x_tex.g);
-    vec2 x_rel = vec2(x_tex.r / region_width, x_tex.g / region_height);
+    vec2 x_rel = vec2(mod(x_tex.r, region_width) / region_width, mod(x_tex.g, region_height) / region_height);
 
     vec4 n_tex = texture(neighbor_texture, x_rel);
 

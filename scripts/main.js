@@ -24,27 +24,10 @@ require([
   var agent_array = new Float32Array(num_agents * 4);
   var velocity_array = new Float32Array(num_agents * 4);
 
-  var p = 0;
-  for (var i = 0; i < num_agents; ++i) {
-    agent_array[p] = Math.random() * 30.0;
-    velocity_array[p++] = Math.random() * 2.0;
-    // velocity_array[p++] = 1.0;
-
-    agent_array[p] = Math.random() * 30.0;
-    velocity_array[p++] = Math.random() * 2.0;
-    // velocity_array[p++] = 1.0;
-
-    agent_array[p] = 0.0;
-    velocity_array[p++] = 0.0;
-
-    agent_array[p] = 0.0;
-    velocity_array[p++] = 0.0;
-  }
-
-  var agents_texture = new Abubu.Float32Texture(num_agents, 1, { pairable: true, data: agent_array });
+  var agents_texture = new Abubu.Float32Texture(num_agents, 1, { pairable: true });
   var agents_out_texture = new Abubu.Float32Texture(num_agents, 1, { pairable: true });
 
-  var velocity_texture = new Abubu.Float32Texture(num_agents, 1, { pairable: true, data: velocity_array });
+  var velocity_texture = new Abubu.Float32Texture(num_agents, 1, { pairable: true });
   var velocity_out_texture = new Abubu.Float32Texture(num_agents, 1, { pairable: true });
 
   var neighbor_texture = new Abubu.Float32Texture(region_width, region_height, { pairable: true });
@@ -174,6 +157,26 @@ require([
     canvas: region_canvas,
   });
 
+  function initialize() {
+    var p = 0;
+    for (var i = 0; i < num_agents; ++i) {
+      agent_array[p] = Math.random() * 30.0;
+      velocity_array[p++] = Math.random() * 2.0;
+
+      agent_array[p] = Math.random() * 30.0;
+      velocity_array[p++] = Math.random() * 2.0;
+
+      agent_array[p] = 0.0;
+      velocity_array[p++] = 0.0;
+
+      agent_array[p] = 0.0;
+      velocity_array[p++] = 0.0;
+    }
+
+    agents_texture.data = agent_array;
+    velocity_texture.data = velocity_array;
+  }
+
   function run() {
     neighbor_solver.render();
     agent_update_solver.render();
@@ -184,5 +187,24 @@ require([
     window.requestAnimationFrame(run);
   }
 
+  function create_gui() {
+    var gui = new Abubu.Gui();
+    var panel = gui.addPanel({ width: 300 });
+
+    var params_folder = panel.addFolder('Model Parameters');
+
+    var params_elements = {};
+    Object.keys(env).forEach((param) => {
+      params_elements[param] = params_folder.add(env, param);
+      params_elements[param].onChange(() => {
+        Abubu.setUniformInSolvers(param, env[param], [agent_update_solver]);
+      });
+    });
+
+    params_folder.elements = params_elements;
+  }
+
+  create_gui();
+  initialize();
   run();
 });
