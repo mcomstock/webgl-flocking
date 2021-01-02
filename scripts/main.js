@@ -14,9 +14,10 @@ require([
 ) {
   'use strict';
 
+  var display_canvas = document.getElementById('display_canvas');
   var region_canvas = document.getElementById('region_canvas');
   var agent_canvas = document.getElementById('agent_canvas');
-  var collison_count_span = document.getElementById('collison_count');
+  var collision_count_span = document.getElementById('collision_count');
 
   var region_width = parseInt(region_canvas.getAttribute('width'));
   var region_height = parseInt(region_canvas.getAttribute('height'));
@@ -49,6 +50,7 @@ require([
       lambda: 1.0,
       omega: 30.0,
       predator_constant: 10000.0,
+      neighbor_count: 7,
     },
     display: {
       paused: false,
@@ -184,6 +186,10 @@ require([
         type: 'v2',
         value: [0.0, 0.0],
       },
+      neighbor_count: {
+        type: 'i',
+        value: env.model.neighbor_count,
+      },
     },
     targets: {
       agents_out_texture: {
@@ -221,7 +227,7 @@ require([
         value: region_height,
       },
     },
-    canvas: region_canvas,
+    canvas: display_canvas,
   });
 
   var check_collisions_solver = new Abubu.Solver({
@@ -262,12 +268,31 @@ require([
   });
 
   function initialize() {
+    var x_min = parseFloat(document.getElementById('x_init_min').value);
+    var x_max = parseFloat(document.getElementById('x_init_max').value);
+    var y_min = parseFloat(document.getElementById('y_init_min').value);
+    var y_max = parseFloat(document.getElementById('y_init_max').value);
+
+    num_agents = parseInt(document.getElementById('number_agents').value);
+    agent_canvas.setAttribute('width', num_agents);
+
+    agent_array = new Float32Array(num_agents * 4);
+    velocity_array = new Float32Array(num_agents * 4);
+
+    agents_texture = new Abubu.Float32Texture(num_agents, 1, { pairable: true });
+    agents_out_texture = new Abubu.Float32Texture(num_agents, 1, { pairable: true });
+
+    velocity_texture = new Abubu.Float32Texture(num_agents, 1, { pairable: true });
+    velocity_out_texture = new Abubu.Float32Texture(num_agents, 1, { pairable: true });
+
+    collision_texture = new Abubu.Float32Texture(num_agents, 1, { pariable: true });
+
     var p = 0;
     for (var i = 0; i < num_agents; ++i) {
-      agent_array[p] = Math.random() * 30.0;
+      agent_array[p] = x_min + Math.random() * (x_max - x_min);
       velocity_array[p++] = Math.random() * 2.0;
 
-      agent_array[p] = Math.random() * 30.0;
+      agent_array[p] = y_min + Math.random() * (y_max - y_min);
       velocity_array[p++] = Math.random() * 2.0;
 
       agent_array[p] = 0.0;
@@ -279,6 +304,217 @@ require([
 
     agents_texture.data = agent_array;
     velocity_texture.data = velocity_array;
+    total_collisions = 0;
+
+    neighbor_solver = new Abubu.Solver({
+      fragmentShader: FindNeighborsShader,
+      uniforms: {
+        num_agents: {
+          type: 'i',
+          value: num_agents,
+        },
+        agents_texture: {
+          type: 't',
+          value: agents_texture,
+        },
+        region_width: {
+          type: 'f',
+          value: region_width,
+        },
+        region_height: {
+          type: 'f',
+          value: region_height,
+        },
+        neighbor_radius: {
+          type: 'f',
+          value: env.neighbor.neighbor_radius,
+        },
+      },
+      targets: {
+        neighbor_texture_1: {
+          location: 0,
+          target: neighbor_texture_0,
+        },
+        neighbor_texture_2: {
+          location: 1,
+          target: neighbor_texture_1,
+        },
+        neighbor_texture_3: {
+          location: 2,
+          target: neighbor_texture_2,
+        },
+        neighbor_texture_4: {
+          location: 3,
+          target: neighbor_texture_3,
+        },
+      },
+      canvas: region_canvas,
+    });
+
+    agent_update_solver = new Abubu.Solver({
+      fragmentShader: UpdateAgentsShader,
+      uniforms: {
+        num_agents: {
+          type: 'i',
+          value: num_agents,
+        },
+        agents_texture: {
+          type: 't',
+          value: agents_texture,
+        },
+        velocity_texture: {
+          type: 't',
+          value: velocity_texture,
+        },
+        neighbor_texture_0: {
+          type: 't',
+          value: neighbor_texture_0,
+        },
+        neighbor_texture_1: {
+          type: 't',
+          value: neighbor_texture_1,
+        },
+        neighbor_texture_2: {
+          type: 't',
+          value: neighbor_texture_2,
+        },
+        neighbor_texture_3: {
+          type: 't',
+          value: neighbor_texture_3,
+        },
+        region_width: {
+          type: 'f',
+          value: region_width,
+        },
+        region_height: {
+          type: 'f',
+          value: region_height,
+        },
+        dt: {
+          type: 'f',
+          value: env.model.dt,
+        },
+        vbar: {
+          type: 'f',
+          value: env.model.vbar,
+        },
+        abar: {
+          type: 'f',
+          value: env.model.abar,
+        },
+        eta: {
+          type: 'f',
+          value: env.model.eta,
+        },
+        lambda: {
+          type: 'f',
+          value: env.model.lambda,
+        },
+        omega: {
+          type: 'f',
+          value: env.model.omega,
+        },
+        predator_constant: {
+          type: 'f',
+          value: env.model.predator_constant,
+        },
+        predator_active: {
+          // This is read as a bool but passed as an int
+          type: 'i',
+          value: 0,
+        },
+        predator_position: {
+          type: 'v2',
+          value: [0.0, 0.0],
+        },
+        neighbor_count: {
+          type: 'i',
+          value: env.model.neighbor_count,
+        },
+      },
+      targets: {
+        agents_out_texture: {
+          location: 0,
+          target: agents_out_texture,
+        },
+        velocity_out_texture: {
+          location: 1,
+          target: velocity_out_texture,
+        },
+      },
+      canvas: agent_canvas,
+    });
+
+    agent_copy = new Abubu.Copy(agents_out_texture, agents_texture);
+    velocity_copy = new Abubu.Copy(velocity_out_texture, velocity_texture);
+
+    agent_display = new Abubu.Solver({
+      fragmentShader: DisplayAgentsShader,
+      uniforms: {
+        num_agents: {
+          type: 'i',
+          value: num_agents,
+        },
+        agents_texture: {
+          type: 't',
+          value: agents_texture,
+        },
+        region_width: {
+          type: 'f',
+          value: region_width,
+        },
+        region_height: {
+          type: 'f',
+          value: region_height,
+        },
+      },
+      canvas: display_canvas,
+    });
+
+    check_collisions_solver = new Abubu.Solver({
+      fragmentShader: CheckCollisionsShader,
+      uniforms: {
+        agents_texture: {
+          type: 't',
+          value: agents_texture,
+        },
+        neighbor_texture_0: {
+          type: 't',
+          value: neighbor_texture_0,
+        },
+        neighbor_texture_1: {
+          type: 't',
+          value: neighbor_texture_1,
+        },
+        neighbor_texture_2: {
+          type: 't',
+          value: neighbor_texture_2,
+        },
+        neighbor_texture_3: {
+          type: 't',
+          value: neighbor_texture_3,
+        },
+        collision_distance: {
+          type: 'f',
+          value: env.collisions.collision_distance,
+        },
+      },
+      targets: {
+        collision_texture: {
+          location: 0,
+          target: collision_texture,
+        },
+      },
+      canvas: agent_canvas,
+    });
+  }
+
+  function update_view() {
+    var view_width = parseInt(document.getElementById('view_width').value);
+    var view_height = parseInt(document.getElementById('view_height').value);
+
+    display_canvas.setAttribute('width', view_width);
+    display_canvas.setAttribute('height', view_height);
   }
 
   function run() {
@@ -292,7 +528,7 @@ require([
     }
 
     total_collisions += collision_texture.value.reduce((a, b) => a + b, 0);
-    collison_count_span.textContent = total_collisions;
+    collision_count_span.textContent = total_collisions;
 
     window.requestAnimationFrame(run);
   }
@@ -319,7 +555,7 @@ require([
     var display_folder = panel.addFolder('Display Parameters');
     display_folder.elements = create_gui_folder(display_folder, env.display, []);
 
-    var collisions_folder = panel.addFolder('Collison Parameters');
+    var collisions_folder = panel.addFolder('Collision Parameters');
     collisions_folder.elements = create_gui_folder(collisions_folder, env.collisions, [check_collisions_solver]);
 
     var neighbor_folder = panel.addFolder('Neighbor Parameters');
@@ -327,7 +563,7 @@ require([
   }
 
   new Abubu.MouseListener({
-    canvas: region_canvas,
+    canvas: display_canvas,
     event: 'drag',
     callback: (event) => {
       agent_update_solver.uniforms.predator_active.value = 1;
@@ -336,14 +572,21 @@ require([
   });
 
   new Abubu.MouseListener({
-    canvas: region_canvas,
+    canvas: display_canvas,
     event: 'click',
     callback: (event) => {
       agent_update_solver.uniforms.predator_active.value = 0;
     },
   });
 
+  var restart_button = document.getElementById('restart_button');
+  restart_button.addEventListener("click", () => initialize());
+
+  var view_button = document.getElementById('view_button');
+  view_button.addEventListener("click", () => update_view());
+
   create_gui();
+  update_view();
   initialize();
   run();
 });

@@ -9,7 +9,7 @@ uniform sampler2D agents_texture, velocity_texture;
 uniform sampler2D neighbor_texture_0, neighbor_texture_1, neighbor_texture_2, neighbor_texture_3;
 
 uniform float dt, vbar, abar, eta, lambda, omega, region_width, region_height, predator_constant;
-uniform int num_agents;
+uniform int num_agents, neighbor_count;
 uniform bool predator_active;
 uniform vec2 predator_position;
 
@@ -53,6 +53,8 @@ void main() {
     neighbors[14] = int(n3_tex.b);
     neighbors[15] = int(n3_tex.a);
 
+    int neighbors_to_check = min(neighbor_count, neighbors.length());
+
     // Use gradient descent to find the acceleration
     vec2 a = vec2(0.0, 0.0);
     for (int i = 0; i < 1000; ++i) {
@@ -72,7 +74,7 @@ void main() {
         vec2 aggregation = vec2(0.0, 0.0);
         vec2 separation = vec2(0.0, 0.0);
         int N = 0;
-        for (int n = 0; n < neighbors.length(); ++n) {
+        for (int n = 0; n < neighbors_to_check; ++n) {
             if (neighbors[n] == num_agents) {
                 break;
             }

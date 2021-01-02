@@ -6,10 +6,38 @@
     <script data-main="scripts/main.js" src="libs/require.js"></script>
   </head>
   <body>
-    <canvas id="region_canvas" width=512 height=512 style="border:1px solid #000000;"></canvas>
-    <canvas id="agent_canvas" width=50 height=1 style="border:1px solid #000000;display: none;"></canvas>
+    <div id="view_parameters">
+      <label for="view_width">View width</label>
+      <input id="view_width" type="number" min="128" max="1024" value="512">
+      <label for="view_height">View height</label>
+      <input id="view_height" type="number" min="128" max="1024" value="512">
+      <br>
+      <input id="view_button" type="button" value="update view">
+    </div>
+    <div id="canvases">
+      <canvas id="display_canvas" width="512" height="512" style="border:1px solid #000000;"></canvas>
+      <canvas id="region_canvas" width="512" height="512" style="border:1px solid #000000;display: none;"></canvas>
+      <canvas id="agent_canvas" width="50" height="1" style="border:1px solid #000000;display: none;"></canvas>
+    </div>
     <div id="collisions">
-      Collision count: <span id="collison_count">0</span>
+      Collision count: <span id="collision_count">0</span>
+    </div>
+    <br>
+    <div id="initialization_parameters">
+      <label for="x_init_min">x min</label>
+      <input id="x_init_min" type="number" min="0" max="512" value="0">
+      <label for="x_init_max">x max</label>
+      <input id="x_init_max" type="number" min="0" max="512" value="30">
+      <br>
+      <label for="y_init_min">y min</label>
+      <input id="y_init_min" type="number" min="0" max="512" value="0">
+      <label for="y_init_max">y max</label>
+      <input id="y_init_max" type="number" min="0" max="512" value="30">
+      <br>
+      <label for="number_agents">Number of agents</label>
+      <input id="number_agents" type="number" min="1" max="1000" value="50">
+      <br>
+      <input id="restart_button" type="button" value="restart">
     </div>
   </body>
 </html>
