@@ -1,12 +1,14 @@
 /* global define */
 define('scripts/shaders', [
   'libs/Abubu.js',
+  'scripts/interface',
   'text!shaders/find_neighbors.frag',
   'text!shaders/update_agents.frag',
   'text!shaders/display_agents.frag',
   'text!shaders/check_collisions.frag',
 ], function(
   Abubu,
+  FlockingInterface,
   FindNeighborsShader,
   UpdateAgentsShader,
   DisplayAgentsShader,
@@ -15,13 +17,8 @@ define('scripts/shaders', [
   'use strict';
 
   return class FlockingShaders {
-    constructor(region_canvas, agent_canvas, display_canvas) {
-      this.region_width = parseInt(region_canvas.getAttribute('width'));
-      this.region_height = parseInt(region_canvas.getAttribute('height'));
-      this.region_canvas = region_canvas;
-      this.num_agents = parseInt(agent_canvas.getAttribute('width'));
-      this.agent_canvas = agent_canvas;
-      this.display_canvas = display_canvas;
+    constructor(flocking_interface) {
+      this.flocking_interface = flocking_interface;
     }
 
     static defaultEnv() {
@@ -52,6 +49,20 @@ define('scripts/shaders', [
       this.env = env;
     }
 
+    updateFromInterface() {
+      this.region_canvas = this.flocking_interface.region_canvas;
+      this.region_width = FlockingInterface.getWidth(this.region_canvas);
+      this.region_height = FlockingInterface.getHeight(this.region_canvas);
+      this.agent_canvas = this.flocking_interface.agent_canvas;
+      this.num_agents = FlockingInterface.getWidth(this.agent_canvas);
+      this.display_canvas = this.flocking_interface.display_canvas;
+
+      this.x_min = parseFloat(this.flocking_interface.x_min.value);
+      this.x_max = parseFloat(this.flocking_interface.x_max.value);
+      this.y_min = parseFloat(this.flocking_interface.y_min.value);
+      this.y_max = parseFloat(this.flocking_interface.y_max.value);
+    }
+
     createAgentTextures() {
       this.agents_texture = new Abubu.Float32Texture(this.num_agents, 1, { pairable: true });
       this.agents_out_texture = new Abubu.Float32Texture(this.num_agents, 1, { pairable: true });
@@ -69,21 +80,16 @@ define('scripts/shaders', [
       this.neighbor_texture_3 = new Abubu.Float32Texture(this.region_width, this.region_height, { pairable: true });
     }
 
-    initializeAgents(x_min, x_max, y_min, y_max) {
-      this.x_min = x_min;
-      this.x_max = x_max;
-      this.y_min = y_min;
-      this.y_max = y_max;
-
+    initializeAgents() {
       var agent_array = new Float32Array(this.num_agents * 4);
       var velocity_array = new Float32Array(this.num_agents * 4);
 
       var p = 0;
       for (var i = 0; i < this.num_agents; ++i) {
-        agent_array[p] = x_min + Math.random() * (x_max - x_min);
+        agent_array[p] = this.x_min + Math.random() * (this.x_max - this.x_min);
         velocity_array[p++] = Math.random() * 2.0;
 
-        agent_array[p] = y_min + Math.random() * (y_max - y_min);
+        agent_array[p] = this.y_min + Math.random() * (this.y_max - this.y_min);
         velocity_array[p++] = Math.random() * 2.0;
 
         agent_array[p] = 0.0;

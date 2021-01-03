@@ -1,41 +1,30 @@
 /* global require */
 require([
   'libs/Abubu.js',
+  'scripts/interface',
   'scripts/shaders',
 ], function(
   Abubu,
+  FlockingInterface,
   FlockingShaders,
 ) {
   'use strict';
 
-  var display_canvas = document.getElementById('display_canvas');
-  var region_canvas = document.getElementById('region_canvas');
-  var agent_canvas = document.getElementById('agent_canvas');
-  var collision_count_span = document.getElementById('collision_count');
-
   var total_collisions = 0;
 
-  var shaders = new FlockingShaders(region_canvas, agent_canvas, display_canvas);
+  var flocking_interface = new FlockingInterface();
+
+  var shaders = new FlockingShaders(flocking_interface);
   shaders.setEnv(FlockingShaders.defaultEnv());
 
   function initialize() {
-    var x_min = parseFloat(document.getElementById('x_init_min').value);
-    var x_max = parseFloat(document.getElementById('x_init_max').value);
-    var y_min = parseFloat(document.getElementById('y_init_min').value);
-    var y_max = parseFloat(document.getElementById('y_init_max').value);
+    flocking_interface.updateNumberAgents();
 
+    shaders.updateFromInterface();
     shaders.createAgentTextures();
     shaders.createNeighborTextures();
-    shaders.initializeAgents(x_min, x_max, y_min, y_max);
+    shaders.initializeAgents();
     shaders.createAllSolvers();
-  }
-
-  function update_view() {
-    var view_width = parseInt(document.getElementById('view_width').value);
-    var view_height = parseInt(document.getElementById('view_height').value);
-
-    display_canvas.setAttribute('width', view_width);
-    display_canvas.setAttribute('height', view_height);
   }
 
   function run() {
@@ -44,7 +33,7 @@ require([
     }
 
     total_collisions += shaders.collision_texture.value.reduce((a, b) => a + b, 0);
-    collision_count_span.textContent = total_collisions;
+    flocking_interface.collision_count_span.textContent = total_collisions;
 
     window.requestAnimationFrame(run);
   }
@@ -79,7 +68,7 @@ require([
   }
 
   new Abubu.MouseListener({
-    canvas: display_canvas,
+    canvas: flocking_interface.display_canvas,
     event: 'drag',
     callback: (event) => {
       shaders.agent_update_solver.uniforms.predator_active.value = 1;
@@ -88,20 +77,20 @@ require([
   });
 
   new Abubu.MouseListener({
-    canvas: display_canvas,
+    canvas: flocking_interface.display_canvas,
     event: 'click',
     callback: (event) => {
       shaders.agent_update_solver.uniforms.predator_active.value = 0;
     },
   });
 
-  var restart_button = document.getElementById('restart_button');
-  restart_button.addEventListener("click", () => initialize());
+  // This is a lazy solution, since not everything needs to be reset in every case. The time to
+  // initialize doesn't seem long enough to matter for now.
+  flocking_interface.restart_button.addEventListener("click", () => initialize());
 
-  var view_button = document.getElementById('view_button');
-  view_button.addEventListener("click", () => update_view());
+  flocking_interface.view_button.addEventListener("click", () => flocking_interface.updateView());
 
-  update_view();
+  flocking_interface.updateView();
   initialize();
   create_gui();
   run();
