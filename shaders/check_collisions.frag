@@ -45,7 +45,11 @@ void main() {
     vec2 x = vec2(x_tex.r, x_tex.g);
 
     for (int i = 0; i < neighbors.length(); ++i) {
-        vec4 n = texelFetch(agents_texture, ivec2(neighbors[i], 0), 0);
+        // % 64
+        int ind_x = neighbors[i] & 63;
+        // / 64
+        int ind_y = neighbors[i] >> 6;
+        vec4 n = texelFetch(agents_texture, ivec2(ind_x, ind_y), 0);
         vec2 nx = vec2(n.r, n.g);
 
         if (distance(x, nx) < collision_distance) {

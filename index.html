@@ -23,7 +23,7 @@
       <input id="y_init_max" type="range" min="256" max="512" value="512">
       <br>
       <label for="number_agents">Number of agents</label>
-      <input id="number_agents" type="range" min="1" max="1000" value="50">
+      <input id="number_agents" type="range" min="1" max="4096" value="50">
     </div>
     <br>
     <div id="model_parameters">
@@ -64,7 +64,7 @@
     <div id="canvases">
       <canvas id="display_canvas" width="512" height="512" style="border:1px solid #000000;"></canvas>
       <canvas id="region_canvas" width="512" height="512" style="border:1px solid #000000;display: none;"></canvas>
-      <canvas id="agent_canvas" width="1000" height="1" style="border:1px solid #000000;display: none;"></canvas>
+      <canvas id="agent_canvas" width="64" height="64" style="border:1px solid #000000;display: none;"></canvas>
     </div>
     <div id="collisions">
       Collision count: <span id="collision_count">0</span>

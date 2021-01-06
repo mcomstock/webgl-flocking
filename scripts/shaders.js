@@ -50,7 +50,8 @@ define('scripts/shaders', [
       this.region_width = FlockingInterface.getWidth(this.region_canvas);
       this.region_height = FlockingInterface.getHeight(this.region_canvas);
       this.agent_canvas = this.flocking_interface.agent_canvas;
-      this.num_agents = FlockingInterface.getWidth(this.agent_canvas);
+      this.agent_width = FlockingInterface.getWidth(this.agent_canvas);
+      this.agent_height = FlockingInterface.getHeight(this.agent_canvas);
       this.display_canvas = this.flocking_interface.display_canvas;
 
       this.x_min = parseFloat(this.flocking_interface.x_min.value);
@@ -60,13 +61,13 @@ define('scripts/shaders', [
     }
 
     createAgentTextures() {
-      this.agents_texture = new Abubu.Float32Texture(this.num_agents, 1, { pairable: true });
-      this.agents_out_texture = new Abubu.Float32Texture(this.num_agents, 1, { pairable: true });
+      this.agents_texture = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
+      this.agents_out_texture = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
 
-      this.velocity_texture = new Abubu.Float32Texture(this.num_agents, 1, { pairable: true });
-      this.velocity_out_texture = new Abubu.Float32Texture(this.num_agents, 1, { pairable: true });
+      this.velocity_texture = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
+      this.velocity_out_texture = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
 
-      this.collision_texture = new Abubu.Float32Texture(this.num_agents, 1, { pariable: true });
+      this.collision_texture = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pariable: true });
     }
 
     createNeighborTextures() {
@@ -77,11 +78,12 @@ define('scripts/shaders', [
     }
 
     initializeAgents() {
-      var agent_array = new Float32Array(this.num_agents * 4);
-      var velocity_array = new Float32Array(this.num_agents * 4);
+      var max_agents = this.agent_width * this.agent_height;
+      var agent_array = new Float32Array(max_agents * 4);
+      var velocity_array = new Float32Array(max_agents * 4);
 
       var p = 0;
-      for (var i = 0; i < this.num_agents; ++i) {
+      for (var i = 0; i < max_agents; ++i) {
         agent_array[p] = this.x_min + Math.random() * (this.x_max - this.x_min);
         velocity_array[p++] = Math.random() * 2.0;
 
@@ -106,7 +108,7 @@ define('scripts/shaders', [
         uniforms: {
           num_agents: {
             type: 'i',
-            value: this.num_agents,
+            value: this.flocking_interface.number_agents.value,
           },
           agents_texture: {
             type: 't',
@@ -153,7 +155,7 @@ define('scripts/shaders', [
         uniforms: {
           num_agents: {
             type: 'i',
-            value: this.num_agents,
+            value: this.flocking_interface.number_agents.value,
           },
           agents_texture: {
             type: 't',
@@ -257,7 +259,7 @@ define('scripts/shaders', [
         uniforms: {
           num_agents: {
             type: 'i',
-            value: this.num_agents,
+            value: this.flocking_interface.number_agents.value,
           },
           agents_texture: {
             type: 't',

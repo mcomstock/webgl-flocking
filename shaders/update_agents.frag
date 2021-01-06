@@ -79,7 +79,11 @@ void main() {
                 break;
             }
 
-            ivec2 n_index = ivec2(neighbors[n], 0);
+            // % 64
+            int ind_x = neighbors[n] & 63;
+            // / 64
+            int ind_y = neighbors[n] >> 6;
+            ivec2 n_index = ivec2(ind_x, ind_y);
             vec4 nx_tex = texelFetch(agents_texture, n_index, 0);
             vec4 nv_tex = texelFetch(velocity_texture, n_index, 0);
 

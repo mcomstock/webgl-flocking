@@ -38,7 +38,11 @@ void main() {
     alternate_positions[7] = current_pos + vec2(region_height, -1.0 * region_height);
 
     for (int i = 0; i < num_agents; ++i) {
-        vec4 agent_texel = texelFetch(agents_texture, ivec2(i,0), 0);
+        // % 64
+        int i_x = i & 63;
+        // / 64
+        int i_y = i >> 6;
+        vec4 agent_texel = texelFetch(agents_texture, ivec2(i_x, i_y), 0);
         vec2 agent_pos = vec2(agent_texel.r, agent_texel.g);
 
         float d = distance(current_pos, agent_pos);

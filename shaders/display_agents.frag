@@ -17,7 +17,11 @@ void main() {
     vec2 current_pos = vec2(region_width * cc.x, region_height * cc.y);
 
     for (int i = 0; i < num_agents; ++i) {
-        vec4 agent_texel = texelFetch(agents_texture, ivec2(i,0), 0);
+        // % 64
+        int i_x = i & 63;
+        // / 64
+        int i_y = i >> 6;
+        vec4 agent_texel = texelFetch(agents_texture, ivec2(i_x, i_y), 0);
         vec2 agent_pos = vec2(mod(agent_texel.r, region_width), mod(agent_texel.g, region_height));
 
         float dist = distance(current_pos, agent_pos);
