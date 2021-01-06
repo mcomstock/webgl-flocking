@@ -45,10 +45,6 @@ define('scripts/shaders', [
       };
     }
 
-    setEnv(env) {
-      this.env = env;
-    }
-
     updateFromInterface() {
       this.region_canvas = this.flocking_interface.region_canvas;
       this.region_width = FlockingInterface.getWidth(this.region_canvas);
@@ -126,7 +122,7 @@ define('scripts/shaders', [
           },
           neighbor_radius: {
             type: 'f',
-            value: this.env.neighbor.neighbor_radius,
+            value: this.flocking_interface.neighbor_radius.value,
           },
         },
         targets: {
@@ -193,31 +189,31 @@ define('scripts/shaders', [
           },
           dt: {
             type: 'f',
-            value: this.env.model.dt,
+            value: this.flocking_interface.dt.value,
           },
           vbar: {
             type: 'f',
-            value: this.env.model.vbar,
+            value: this.flocking_interface.vbar.value,
           },
           abar: {
             type: 'f',
-            value: this.env.model.abar,
+            value: this.flocking_interface.abar.value,
           },
           eta: {
             type: 'f',
-            value: this.env.model.eta,
+            value: this.flocking_interface.eta.value,
           },
           lambda: {
             type: 'f',
-            value: this.env.model.lambda,
+            value: this.flocking_interface.lambda.value,
           },
           omega: {
             type: 'f',
-            value: this.env.model.omega,
+            value: this.flocking_interface.omega.value,
           },
           predator_constant: {
             type: 'f',
-            value: this.env.model.predator_constant,
+            value: this.flocking_interface.predator_constant.value,
           },
           predator_active: {
             // This is read as a bool but passed as an int
@@ -230,7 +226,7 @@ define('scripts/shaders', [
           },
           neighbor_count: {
             type: 'i',
-            value: this.env.model.neighbor_count,
+            value: this.flocking_interface.neighbor_count.value,
           },
         },
         targets: {
@@ -306,7 +302,7 @@ define('scripts/shaders', [
           },
           collision_distance: {
             type: 'f',
-            value: this.env.collisions.collision_distance,
+            value: this.flocking_interface.collision_distance.value,
           },
         },
         targets: {

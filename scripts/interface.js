@@ -18,6 +18,19 @@ define('scripts/interface', [], function() {
       this.restart_button = document.getElementById('restart_button');
 
       this.view_size = document.getElementById('view_size');
+
+      this.dt = document.getElementById('param_dt');
+      this.vbar = document.getElementById('param_vbar');
+      this.abar = document.getElementById('param_abar');
+      this.eta = document.getElementById('param_eta');
+      this.lambda = document.getElementById('param_lambda');
+      this.omega = document.getElementById('param_omega');
+      this.predator_constant = document.getElementById('param_predator_constant');
+      this.neighbor_count = document.getElementById('param_neighbor_count');
+      this.neighbor_radius = document.getElementById('param_neighbor_radius');
+      this.collision_distance = document.getElementById('param_collision_distance');
+
+      this.model_parameters = document.getElementById('model_parameters');
     }
 
     static getWidth(element) {
@@ -31,10 +44,6 @@ define('scripts/interface', [], function() {
     updateView() {
       this.display_canvas.setAttribute('width', parseInt(this.view_size.value));
       this.display_canvas.setAttribute('height', parseInt(this.view_size.value));
-    }
-
-    updateNumberAgents() {
-      this.agent_canvas.setAttribute('width', parseInt(this.number_agents.value));
     }
   };
 });

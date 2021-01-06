@@ -8,7 +8,7 @@
   <body>
     <div id="view_parameters">
       <label for="view_size">View size</label>
-      <input id="view_size" type="range" min="512" max="2048" step="1" value="512">
+      <input id="view_size" type="range" min="512" max="1024" step="1" value="512">
     </div>
     <br>
     <div id="initialization_parameters">
@@ -24,9 +24,42 @@
       <br>
       <label for="number_agents">Number of agents</label>
       <input id="number_agents" type="range" min="1" max="1000" value="50">
-      <br>
-      <input id="restart_button" type="button" value="restart">
     </div>
+    <br>
+    <div id="model_parameters">
+      <label for="param_dt">dt</label>
+      <input id="param_dt" type="range" min="0.1" max="1.0" step="0.1" value="0.3">
+      <br>
+      <label for="param_vbar">Max velocity</label>
+      <input id="param_vbar" type="range" min="1" max="20" step="0.1" value="8">
+      <br>
+      <label for="param_abar">Max acceleration</label>
+      <input id="param_abar" type="range" min="0.1" max="10" step="0.1" value="1">
+      <br>
+      <label for="param_eta">Eta (not implemented yet)</label>
+      <input id="param_eta" type="range" min="1" max="3" step="1" value="1">
+      <br>
+      <label for="param_lambda">Acceleration cost factor</label>
+      <input id="param_lambda" type="range" min="0" max="2" step="0.1" value="1">
+      <br>
+      <label for="param_omega">Distance cost factor</label>
+      <input id="param_omega" type="range" min="0" max="300" step="0.1" value="30">
+      <br>
+      <label for="param_predator_constant">Predator cost factor</label>
+      <input id="param_predator_constant" type="range" min="0" max="100000" step="10" value="10000">
+      <br>
+      <label for="param_neighbor_count">Max neighbor count</label>
+      <input id="param_neighbor_count" type="range" min="0" max="16" step="1" value="7">
+      <br>
+      <label for="param_neighbor_radius">Max neighbor radius</label>
+      <input id="param_neighbor_radius" type="range" min="0" max="1000" step="0.1" value="8.4">
+      <br>
+      <label for="param_collision_distance">Distance to count as a collision</label>
+      <input id="param_collision_distance" type="range" min="0" max="10" step="0.1" value="3">
+    </div>
+    <br>
+    <input id="restart_button" type="button" value="restart">
+    <br>
     <br>
     <div id="canvases">
       <canvas id="display_canvas" width="512" height="512" style="border:1px solid #000000;"></canvas>
