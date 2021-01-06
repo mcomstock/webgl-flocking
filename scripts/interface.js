@@ -17,9 +17,7 @@ define('scripts/interface', [], function() {
       this.number_agents = document.getElementById('number_agents');
       this.restart_button = document.getElementById('restart_button');
 
-      this.view_width = document.getElementById('view_width');
-      this.view_height = document.getElementById('view_height');
-      this.view_button = document.getElementById('view_button');
+      this.view_size = document.getElementById('view_size');
     }
 
     static getWidth(element) {
@@ -31,8 +29,8 @@ define('scripts/interface', [], function() {
     }
 
     updateView() {
-      this.display_canvas.setAttribute('width', parseInt(this.view_width.value));
-      this.display_canvas.setAttribute('height', parseInt(this.view_height.value));
+      this.display_canvas.setAttribute('width', parseInt(this.view_size.value));
+      this.display_canvas.setAttribute('height', parseInt(this.view_size.value));
     }
 
     updateNumberAgents() {

@@ -86,9 +86,14 @@ require([
 
   // This is a lazy solution, since not everything needs to be reset in every case. The time to
   // initialize doesn't seem long enough to matter for now.
-  flocking_interface.restart_button.addEventListener("click", () => initialize());
+  flocking_interface.restart_button.addEventListener('click', () => initialize());
 
-  flocking_interface.view_button.addEventListener("click", () => flocking_interface.updateView());
+  flocking_interface.number_agents.addEventListener('input', () => {
+    shaders.num_agents = flocking_interface.number_agents.value;
+    shaders.createAllSolvers();
+  });
+
+  flocking_interface.view_size.addEventListener('input', () => flocking_interface.updateView());
 
   flocking_interface.updateView();
   initialize();
