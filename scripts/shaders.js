@@ -19,6 +19,13 @@ define('scripts/shaders', [
   return class FlockingShaders {
     constructor(flocking_interface) {
       this.flocking_interface = flocking_interface;
+
+      this.region_width = 512;
+      this.region_height = 512;
+
+      // Shader code depends on these specific values
+      this.agent_width = 64;
+      this.agent_height = 64;
     }
 
     static defaultEnv() {
@@ -46,12 +53,6 @@ define('scripts/shaders', [
     }
 
     updateFromInterface() {
-      this.region_canvas = this.flocking_interface.region_canvas;
-      this.region_width = FlockingInterface.getWidth(this.region_canvas);
-      this.region_height = FlockingInterface.getHeight(this.region_canvas);
-      this.agent_canvas = this.flocking_interface.agent_canvas;
-      this.agent_width = FlockingInterface.getWidth(this.agent_canvas);
-      this.agent_height = FlockingInterface.getHeight(this.agent_canvas);
       this.display_canvas = this.flocking_interface.display_canvas;
 
       this.x_min = parseFloat(this.flocking_interface.x_min.value);
@@ -145,7 +146,6 @@ define('scripts/shaders', [
             target: this.neighbor_texture_3,
           },
         },
-        canvas: this.region_canvas,
       });
     }
 
@@ -241,7 +241,6 @@ define('scripts/shaders', [
             target: this.velocity_out_texture,
           },
         },
-        canvas: this.agent_canvas,
       });
     }
 
@@ -313,7 +312,6 @@ define('scripts/shaders', [
             target: this.collision_texture,
           },
         },
-        canvas: this.agent_canvas,
       });
     }
 

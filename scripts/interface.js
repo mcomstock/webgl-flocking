@@ -5,8 +5,6 @@ define('scripts/interface', [], function() {
   return class FlockingInterface {
     constructor() {
       this.display_canvas = document.getElementById('display_canvas');
-      this.region_canvas = document.getElementById('region_canvas');
-      this.agent_canvas = document.getElementById('agent_canvas');
 
       this.collision_count_span = document.getElementById('collision_count');
 
