@@ -18,12 +18,11 @@ void main() {
     collision_texture = vec4(0.0, 0.0, 0.0, 0.0);
 
     vec4 x_tex = texture(agents_texture, cc);
-    vec2 x_rel = vec2(mod(x_tex.r, region_width) / region_width, mod(x_tex.g, region_height) / region_height);
 
-    vec4 n0_tex = texture(neighbor_texture_0, x_rel);
-    vec4 n1_tex = texture(neighbor_texture_1, x_rel);
-    vec4 n2_tex = texture(neighbor_texture_2, x_rel);
-    vec4 n3_tex = texture(neighbor_texture_3, x_rel);
+    vec4 n0_tex = texture(neighbor_texture_0, cc);
+    vec4 n1_tex = texture(neighbor_texture_1, cc);
+    vec4 n2_tex = texture(neighbor_texture_2, cc);
+    vec4 n3_tex = texture(neighbor_texture_3, cc);
 
     neighbors[0] = int(n0_tex.r);
     neighbors[1] = int(n0_tex.g);

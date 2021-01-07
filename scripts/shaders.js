@@ -72,10 +72,10 @@ define('scripts/shaders', [
     }
 
     createNeighborTextures() {
-      this.neighbor_texture_0 = new Abubu.Float32Texture(this.region_width, this.region_height, { pairable: true });
-      this.neighbor_texture_1 = new Abubu.Float32Texture(this.region_width, this.region_height, { pairable: true });
-      this.neighbor_texture_2 = new Abubu.Float32Texture(this.region_width, this.region_height, { pairable: true });
-      this.neighbor_texture_3 = new Abubu.Float32Texture(this.region_width, this.region_height, { pairable: true });
+      this.neighbor_texture_0 = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
+      this.neighbor_texture_1 = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
+      this.neighbor_texture_2 = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
+      this.neighbor_texture_3 = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
     }
 
     initializeAgents() {

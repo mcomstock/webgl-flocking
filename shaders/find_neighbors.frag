@@ -27,17 +27,28 @@ void main() {
         distances[i] = BIG_FLOAT;
     }
 
-    vec2 current_pos = vec2(region_width * cc.x, region_height * cc.y);
-    alternate_positions[0] = current_pos + vec2(region_width, 0.0);
-    alternate_positions[1] = current_pos + vec2(0.0, region_height);
-    alternate_positions[2] = current_pos + vec2(region_width, region_height);
-    alternate_positions[3] = current_pos + vec2(-1.0 * region_width, 0.0);
-    alternate_positions[4] = current_pos + vec2(0.0, -1.0 * region_height);
-    alternate_positions[5] = current_pos + vec2(-1.0 * region_width, -1.0 * region_height);
-    alternate_positions[6] = current_pos + vec2(-1.0 * region_width, region_height);
-    alternate_positions[7] = current_pos + vec2(region_height, -1.0 * region_height);
+    vec4 current_agent_tex = texture(agents_texture, cc);
+    vec2 current_agent_pos = vec2(current_agent_tex.r, current_agent_tex.g);
+
+    int current_agent_x = int(floor(cc.x * 64.0));
+    int current_agent_y = int(floor(cc.y * 64.0));
+    int current_agent_idx = 64 * current_agent_y + current_agent_x;
+
+    alternate_positions[0] = current_agent_pos + vec2(region_width, 0.0);
+    alternate_positions[1] = current_agent_pos + vec2(0.0, region_height);
+    alternate_positions[2] = current_agent_pos + vec2(region_width, region_height);
+    alternate_positions[3] = current_agent_pos + vec2(-1.0 * region_width, 0.0);
+    alternate_positions[4] = current_agent_pos + vec2(0.0, -1.0 * region_height);
+    alternate_positions[5] = current_agent_pos + vec2(-1.0 * region_width, -1.0 * region_height);
+    alternate_positions[6] = current_agent_pos + vec2(-1.0 * region_width, region_height);
+    alternate_positions[7] = current_agent_pos + vec2(region_height, -1.0 * region_height);
 
     for (int i = 0; i < num_agents; ++i) {
+        // The agent should not have itself as a neighbor
+        if (i == current_agent_idx) {
+            continue;
+        }
+
         // % 64
         int i_x = i & 63;
         // / 64
@@ -45,7 +56,7 @@ void main() {
         vec4 agent_texel = texelFetch(agents_texture, ivec2(i_x, i_y), 0);
         vec2 agent_pos = vec2(agent_texel.r, agent_texel.g);
 
-        float d = distance(current_pos, agent_pos);
+        float d = distance(current_agent_pos, agent_pos);
         for (int pos = 0; pos < alternate_positions.length(); ++pos) {
             float ad = distance(alternate_positions[pos], agent_pos);
             d = min(d, ad);
