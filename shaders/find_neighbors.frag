@@ -34,6 +34,14 @@ void main() {
     int current_agent_y = int(floor(cc.y * 64.0));
     int current_agent_idx = 64 * current_agent_y + current_agent_x;
 
+    if (current_agent_idx >= num_agents) {
+        neighbor_texture_0 = vec4(num_agents, num_agents, num_agents, num_agents);
+        neighbor_texture_1 = vec4(num_agents, num_agents, num_agents, num_agents);
+        neighbor_texture_2 = vec4(num_agents, num_agents, num_agents, num_agents);
+        neighbor_texture_3 = vec4(num_agents, num_agents, num_agents, num_agents);
+        return;
+    }
+
     alternate_positions[0] = current_agent_pos + vec2(region_width, 0.0);
     alternate_positions[1] = current_agent_pos + vec2(0.0, region_height);
     alternate_positions[2] = current_agent_pos + vec2(region_width, region_height);

@@ -27,6 +27,16 @@ void main() {
     vec4 v_tex = texture(velocity_texture, cc);
     vec4 x_tex = texture(agents_texture, cc);
 
+    int current_agent_x = int(floor(cc.x * 64.0));
+    int current_agent_y = int(floor(cc.y * 64.0));
+    int current_agent_idx = 64 * current_agent_y + current_agent_x;
+
+    if (current_agent_idx >= num_agents) {
+        agents_out_texture = x_tex;
+        velocity_out_texture = v_tex;
+        return;
+    }
+
     vec2 v = vec2(v_tex.r, v_tex.g);
     vec2 x = vec2(x_tex.r, x_tex.g);
 
@@ -74,7 +84,7 @@ void main() {
         vec2 separation = vec2(0.0, 0.0);
         int N = 0;
         for (int n = 0; n < neighbors_to_check; ++n) {
-            if (neighbors[n] == num_agents) {
+            if (neighbors[n] >= num_agents) {
                 break;
             }
 
