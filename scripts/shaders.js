@@ -315,6 +315,38 @@ define('scripts/shaders', [
       });
     }
 
+    updateNeighborSolver() {
+      this.neighbor_solver.uniforms.num_agents.value = this.flocking_interface.number_agents.value;
+      this.neighbor_solver.uniforms.neighbor_radius.value = this.flocking_interface.neighbor_radius.value;
+    }
+
+    updateAgentUpdateSolver() {
+      this.agent_update_solver.uniforms.num_agents.value = this.flocking_interface.number_agents.value;
+      this.agent_update_solver.uniforms.dt.value = this.flocking_interface.dt.value;
+      this.agent_update_solver.uniforms.vbar.value = this.flocking_interface.vbar.value;
+      this.agent_update_solver.uniforms.abar.value = this.flocking_interface.abar.value;
+      this.agent_update_solver.uniforms.eta.value = this.flocking_interface.eta.value;
+      this.agent_update_solver.uniforms.lambda.value = this.flocking_interface.lambda.value;
+      this.agent_update_solver.uniforms.omega.value = this.flocking_interface.omega.value;
+      this.agent_update_solver.uniforms.predator_constant.value = this.flocking_interface.predator_constant.value;
+      this.agent_update_solver.uniforms.neighbor_count.value = this.flocking_interface.neighbor_count.value;
+    }
+
+    updateAgentDisplaySolver() {
+      this.agent_display.uniforms.num_agents.value = this.flocking_interface.number_agents.value;
+    }
+
+    updateCheckCollisionsSolver() {
+      this.check_collisions_solver.uniforms.collision_distance.value = this.flocking_interface.collision_distance.value;
+    }
+
+    updateAllSolvers() {
+      this.updateNeighborSolver();
+      this.updateAgentUpdateSolver();
+      this.updateAgentDisplaySolver();
+      this.updateCheckCollisionsSolver();
+    }
+
     createAllSolvers() {
       this.createNeighborSolver();
       this.createAgentUpdateSolver();

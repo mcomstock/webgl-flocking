@@ -37,11 +37,11 @@ void main() {
     alternate_positions[0] = current_agent_pos + vec2(region_width, 0.0);
     alternate_positions[1] = current_agent_pos + vec2(0.0, region_height);
     alternate_positions[2] = current_agent_pos + vec2(region_width, region_height);
-    alternate_positions[3] = current_agent_pos + vec2(-1.0 * region_width, 0.0);
-    alternate_positions[4] = current_agent_pos + vec2(0.0, -1.0 * region_height);
-    alternate_positions[5] = current_agent_pos + vec2(-1.0 * region_width, -1.0 * region_height);
-    alternate_positions[6] = current_agent_pos + vec2(-1.0 * region_width, region_height);
-    alternate_positions[7] = current_agent_pos + vec2(region_height, -1.0 * region_height);
+    alternate_positions[3] = current_agent_pos + vec2(-region_width, 0.0);
+    alternate_positions[4] = current_agent_pos + vec2(0.0, -region_height);
+    alternate_positions[5] = current_agent_pos + vec2(-region_width, -region_height);
+    alternate_positions[6] = current_agent_pos + vec2(-region_width, region_height);
+    alternate_positions[7] = current_agent_pos + vec2(region_height, -region_height);
 
     for (int i = 0; i < num_agents; ++i) {
         // The agent should not have itself as a neighbor

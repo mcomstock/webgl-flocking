@@ -50,8 +50,8 @@ require([
   });
 
   flocking_interface.restart_button.addEventListener('click', () => initialize());
-  flocking_interface.number_agents.addEventListener('input', () => shaders.createAllSolvers());
-  flocking_interface.model_parameters.addEventListener('change', () => shaders.createAllSolvers());
+  flocking_interface.number_agents.addEventListener('input', () => shaders.updateAllSolvers());
+  flocking_interface.model_parameters.addEventListener('change', () => shaders.updateAllSolvers());
   flocking_interface.view_size.addEventListener('input', () => flocking_interface.updateView());
 
   flocking_interface.updateView();
