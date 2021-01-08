@@ -281,6 +281,10 @@ define('scripts/shaders', [
       this.check_collisions_solver = new Abubu.Solver({
         fragmentShader: CheckCollisionsShader,
         uniforms: {
+          num_agents: {
+            type: 'i',
+            value: this.flocking_interface.number_agents.value,
+          },
           agents_texture: {
             type: 't',
             value: this.agents_texture,
@@ -288,18 +292,6 @@ define('scripts/shaders', [
           neighbor_texture_0: {
             type: 't',
             value: this.neighbor_texture_0,
-          },
-          neighbor_texture_1: {
-            type: 't',
-            value: this.neighbor_texture_1,
-          },
-          neighbor_texture_2: {
-            type: 't',
-            value: this.neighbor_texture_2,
-          },
-          neighbor_texture_3: {
-            type: 't',
-            value: this.neighbor_texture_3,
           },
           collision_distance: {
             type: 'f',
@@ -337,6 +329,7 @@ define('scripts/shaders', [
     }
 
     updateCheckCollisionsSolver() {
+      this.check_collisions_solver.uniforms.num_agents.value = this.flocking_interface.number_agents.value;
       this.check_collisions_solver.uniforms.collision_distance.value = this.flocking_interface.collision_distance.value;
     }
 

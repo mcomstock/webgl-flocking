@@ -26,7 +26,8 @@ require([
   function run() {
     shaders.runOneIteration();
 
-    total_collisions += shaders.collision_texture.value.reduce((a, b) => a + b, 0);
+    var collisions = shaders.collision_texture.value.reduce((a, b) => a + b, 0);
+    total_collisions += collisions;
     flocking_interface.collision_count_span.textContent = total_collisions;
 
     window.requestAnimationFrame(run);
