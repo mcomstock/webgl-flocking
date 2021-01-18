@@ -1,10 +1,9 @@
+#version 300 es
+
 precision highp float;
 precision highp int;
 
-attribute vec4 aVertexPosition;
-
-// uniform mat4 uModelViewMatrix;
-// uniform mat4 uProjectionMatrix;
+in vec4 aVertexPosition;
 
 void main() {
     gl_Position = vec4(aVertexPosition.x / 256.0 - 1.0, aVertexPosition.y / 256.0 - 1.0, 0.0, 1.0);

@@ -15,7 +15,7 @@ define('scripts/display', [
   return class FlockingDisplay {
     constructor(canvas) {
       this.canvas = canvas;
-      this.gl = canvas.getContext('webgl');
+      this.gl = canvas.getContext('webgl2');
     }
 
     static loadShader(gl, type, source) {
