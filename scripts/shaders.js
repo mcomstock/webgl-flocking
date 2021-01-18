@@ -4,14 +4,12 @@ define('scripts/shaders', [
   'scripts/interface',
   'text!shaders/find_neighbors.frag',
   'text!shaders/update_agents.frag',
-  'text!shaders/display_agents.frag',
   'text!shaders/check_collisions.frag',
 ], function(
   Abubu,
   FlockingInterface,
   FindNeighborsShader,
   UpdateAgentsShader,
-  DisplayAgentsShader,
   CheckCollisionsShader,
 ) {
   'use strict';
@@ -53,8 +51,6 @@ define('scripts/shaders', [
     }
 
     updateFromInterface() {
-      this.display_canvas = this.flocking_interface.display_canvas;
-
       this.x_min = parseFloat(this.flocking_interface.x_min.value);
       this.x_max = parseFloat(this.flocking_interface.x_max.value);
       this.y_min = parseFloat(this.flocking_interface.y_min.value);
@@ -252,31 +248,6 @@ define('scripts/shaders', [
       this.velocity_copy = new Abubu.Copy(this.velocity_out_texture, this.velocity_texture);
     }
 
-    createAgentDisplaySolver() {
-      this.agent_display = new Abubu.Solver({
-        fragmentShader: DisplayAgentsShader,
-        uniforms: {
-          num_agents: {
-            type: 'i',
-            value: this.flocking_interface.number_agents.value,
-          },
-          agents_texture: {
-            type: 't',
-            value: this.agents_texture,
-          },
-          region_width: {
-            type: 'f',
-            value: this.region_width,
-          },
-          region_height: {
-            type: 'f',
-            value: this.region_height,
-          },
-        },
-        canvas: this.display_canvas,
-      });
-    }
-
     createCheckCollisionsSolver() {
       this.check_collisions_solver = new Abubu.Solver({
         fragmentShader: CheckCollisionsShader,
@@ -324,10 +295,6 @@ define('scripts/shaders', [
       this.agent_update_solver.uniforms.neighbor_count.value = this.flocking_interface.neighbor_count.value;
     }
 
-    updateAgentDisplaySolver() {
-      this.agent_display.uniforms.num_agents.value = this.flocking_interface.number_agents.value;
-    }
-
     updateCheckCollisionsSolver() {
       this.check_collisions_solver.uniforms.num_agents.value = this.flocking_interface.number_agents.value;
       this.check_collisions_solver.uniforms.collision_distance.value = this.flocking_interface.collision_distance.value;
@@ -336,7 +303,6 @@ define('scripts/shaders', [
     updateAllSolvers() {
       this.updateNeighborSolver();
       this.updateAgentUpdateSolver();
-      this.updateAgentDisplaySolver();
       this.updateCheckCollisionsSolver();
     }
 
@@ -345,7 +311,6 @@ define('scripts/shaders', [
       this.createAgentUpdateSolver();
       this.createAgentCopySolver();
       this.createVelocityCopySolver();
-      this.createAgentDisplaySolver();
       this.createCheckCollisionsSolver();
     }
 
@@ -354,7 +319,6 @@ define('scripts/shaders', [
       this.agent_update_solver.render();
       this.agent_copy.render();
       this.velocity_copy.render();
-      this.agent_display.render();
       this.check_collisions_solver.render();
     }
   };

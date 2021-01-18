@@ -1,10 +1,12 @@
 /* global require */
 require([
   'libs/Abubu.js',
+  'scripts/display',
   'scripts/interface',
   'scripts/shaders',
 ], function(
   Abubu,
+  FlockingDisplay,
   FlockingInterface,
   FlockingShaders,
 ) {
@@ -14,8 +16,9 @@ require([
 
   var flocking_interface = new FlockingInterface();
   var shaders = new FlockingShaders(flocking_interface);
+  var display = new FlockingDisplay(flocking_interface.display_canvas);
 
-  function initialize() {
+  function initializeShaders() {
     shaders.updateFromInterface();
     shaders.createAgentTextures();
     shaders.createNeighborTextures();
@@ -23,8 +26,16 @@ require([
     shaders.createAllSolvers();
   }
 
+  function initializeDisplay() {
+    display.initBirdShaderProgram();
+    display.setAgentCount(flocking_interface.number_agents.value);
+    display.resizeViewport();
+  }
+
   function run() {
     shaders.runOneIteration();
+    display.updatePositionBuffer(shaders.agents_texture.value);
+    display.drawScene();
 
     var collisions = shaders.collision_texture.value.reduce((a, b) => a + b, 0);
     total_collisions += collisions;
@@ -50,12 +61,19 @@ require([
     },
   });
 
-  flocking_interface.restart_button.addEventListener('click', () => initialize());
-  flocking_interface.number_agents.addEventListener('input', () => shaders.updateAllSolvers());
+  flocking_interface.restart_button.addEventListener('click', () => initializeShaders());
+  flocking_interface.number_agents.addEventListener('input', () => {
+    shaders.updateAllSolvers();
+    display.setAgentCount(flocking_interface.number_agents.value);
+  });
   flocking_interface.model_parameters.addEventListener('change', () => shaders.updateAllSolvers());
-  flocking_interface.view_size.addEventListener('input', () => flocking_interface.updateView());
+  flocking_interface.view_size.addEventListener('input', () => {
+    flocking_interface.updateView();
+    display.resizeViewport();
+  });
 
   flocking_interface.updateView();
-  initialize();
+  initializeShaders();
+  initializeDisplay();
   run();
 });

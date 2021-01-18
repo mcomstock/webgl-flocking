@@ -158,8 +158,6 @@ void main() {
 
     x += dt * v;
 
-    float hi = predator_active ? 1.0 : 0.0;
-
     velocity_out_texture = vec4(v.x, v.y, 0.0, 0.0);
-    agents_out_texture = vec4(mod(x.x, region_width), mod(x.y, region_height), hi, hi);
+    agents_out_texture = vec4(mod(x.x, region_width), mod(x.y, region_height), 0.0, 0.0);
 }
