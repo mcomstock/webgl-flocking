@@ -21,7 +21,10 @@ float gamma = 0.05;
 
 int neighbors[16];
 
-vec2 alternate_positions[8];
+vec2 walls[4];
+
+// The range at which to start caring about the walls
+float sq_wall_dist_range = 20.0 * 20.0;
 
 void main() {
     vec4 v_tex = texture(velocity_texture, cc);
@@ -63,21 +66,20 @@ void main() {
     neighbors[15] = int(n3_tex.a);
 
     int neighbors_to_check = min(neighbor_count, neighbors.length());
+    int num_walls = walls.length();
+
+    vec2 predator = vec2(predator_position.x * region_width, predator_position.y * region_height);
 
     // Use gradient descent to find the acceleration
     vec2 a = vec2(0.0, 0.0);
     for (int i = 0; i < 1000; ++i) {
         vec2 xi = x + dt * v + dt * dt * a;
-        xi = vec2(mod(xi.x, region_width), mod(xi.y, region_height));
 
-        alternate_positions[0] = xi + vec2(region_width, 0.0);
-        alternate_positions[1] = xi + vec2(0.0, region_height);
-        alternate_positions[2] = xi + vec2(region_width, region_height);
-        alternate_positions[3] = xi + vec2(-1.0 * region_width, 0.0);
-        alternate_positions[4] = xi + vec2(0.0, -1.0 * region_height);
-        alternate_positions[5] = xi + vec2(-1.0 * region_width, -1.0 * region_height);
-        alternate_positions[6] = xi + vec2(-1.0 * region_width, region_height);
-        alternate_positions[7] = xi + vec2(region_height, -1.0 * region_height);
+        // Nearest position on each wall
+        walls[0] = vec2(0.0, xi.y);
+        walls[1] = vec2(region_width, xi.y);
+        walls[2] = vec2(xi.x, 0.0);
+        walls[3] = vec2(xi.x, region_height);
 
         vec2 xj = vec2(0.0, 0.0);
         vec2 aggregation = vec2(0.0, 0.0);
@@ -100,26 +102,14 @@ void main() {
             vec2 nv = vec2(nv_tex.r, nv_tex.g);
 
             xj = nx + dt * nv;
-            xj = vec2(mod(xj.x, region_width), mod(xj.y, region_height));
 
-            vec2 txi = xi;
-            float d = distance(txi, xj);
-            for (int pos = 0; pos < alternate_positions.length(); ++pos) {
-                float ad = distance(alternate_positions[pos], xj);
-
-                if (ad < d) {
-                    txi = alternate_positions[pos];
-                    d = ad;
-                }
-            }
-
-            if (txi == xj) {
+            if (xi == xj) {
                 continue;
             }
 
             ++N;
 
-            vec2 xij = txi - xj;
+            vec2 xij = xi - xj;
             float sqdist = dot(xij, xij);
 
             vec2 dxij = 2.0 * xij * dt * dt;
@@ -128,21 +118,29 @@ void main() {
             separation += dxij / (sqdist * sqdist);
         }
 
-        if (N == 0) {
-            continue;
+        if (N != 0) {
+            vec2 regularization = a;
+            a -= (aggregation / float(N) - omega * separation + 2.0 * lambda * regularization);
         }
 
-        vec2 regularization = a;
+        // Avoid the walls if too close
+        for (int w = 0; w < num_walls; ++w) {
+            vec2 w_dist = xi - walls[w];
+            float sq_w_dist = dot(w_dist, w_dist);
 
-        a -= gamma * (aggregation / float(N) - omega * separation + 2.0 * lambda * regularization);
+            if (sq_w_dist < sq_wall_dist_range) {
+                a += predator_constant * 2.0 * w_dist * dt * dt / (sq_w_dist * sq_w_dist);
+            }
+        }
 
+        // Avoid the predator
         if (predator_active) {
-            vec2 p = vec2(predator_position.x * region_width, predator_position.y * region_height);
-
-            vec2 xip = xi - p;
+            vec2 xip = xi - predator;
             float sqdist = dot(xip, xip);
-            a += gamma * predator_constant * 2.0 * xip * dt * dt / (sqdist * sqdist);
+            a += predator_constant * 2.0 * xip * dt * dt / (sqdist * sqdist);
         }
+
+        a = gamma * a;
     }
 
     // Update the velocity and position

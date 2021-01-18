@@ -19,8 +19,6 @@ layout (location = 3) out vec4 neighbor_texture_3;
 float neighbors[16];
 float distances[16];
 
-vec2 alternate_positions[8];
-
 void main() {
     for (int i = 0; i < neighbors.length(); ++i) {
         neighbors[i] = float(num_agents);
@@ -42,15 +40,6 @@ void main() {
         return;
     }
 
-    alternate_positions[0] = current_agent_pos + vec2(region_width, 0.0);
-    alternate_positions[1] = current_agent_pos + vec2(0.0, region_height);
-    alternate_positions[2] = current_agent_pos + vec2(region_width, region_height);
-    alternate_positions[3] = current_agent_pos + vec2(-region_width, 0.0);
-    alternate_positions[4] = current_agent_pos + vec2(0.0, -region_height);
-    alternate_positions[5] = current_agent_pos + vec2(-region_width, -region_height);
-    alternate_positions[6] = current_agent_pos + vec2(-region_width, region_height);
-    alternate_positions[7] = current_agent_pos + vec2(region_height, -region_height);
-
     for (int i = 0; i < num_agents; ++i) {
         // The agent should not have itself as a neighbor
         if (i == current_agent_idx) {
@@ -65,10 +54,6 @@ void main() {
         vec2 agent_pos = vec2(agent_texel.r, agent_texel.g);
 
         float d = distance(current_agent_pos, agent_pos);
-        for (int pos = 0; pos < alternate_positions.length(); ++pos) {
-            float ad = distance(alternate_positions[pos], agent_pos);
-            d = min(d, ad);
-        }
 
         if (d > neighbor_radius) {
             continue;

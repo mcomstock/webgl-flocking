@@ -82,10 +82,10 @@ define('scripts/shaders', [
       var p = 0;
       for (var i = 0; i < max_agents; ++i) {
         agent_array[p] = this.x_min + Math.random() * (this.x_max - this.x_min);
-        velocity_array[p++] = Math.random() * 2.0;
+        velocity_array[p++] = (Math.random() - 0.5) * 4.0;
 
         agent_array[p] = this.y_min + Math.random() * (this.y_max - this.y_min);
-        velocity_array[p++] = Math.random() * 2.0;
+        velocity_array[p++] = (Math.random() - 0.5) * 4.0;
 
         agent_array[p] = 0.0;
         velocity_array[p++] = 0.0;
