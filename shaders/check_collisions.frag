@@ -32,6 +32,10 @@ void main() {
     // Only compare with the nearest neighbor
     int n_ind = int(n_tex.r);
 
+    if (n_ind >= num_agents) {
+        return;
+    }
+
     int n_ind_x = n_ind & 63;
     int n_ind_y = n_ind >> 6;
 
