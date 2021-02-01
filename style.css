@@ -1,0 +1,9 @@
+body {
+  font-family: "sans-serif";
+}
+
+.param_div {
+  display: grid;
+  grid-template-columns: max-content max-content max-content max-content;
+  grid-column-gap: 0.5em;
+}

@@ -4,63 +4,103 @@
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
     <script src="config.js"></script>
     <script data-main="scripts/main.js" src="libs/require.js"></script>
+    <link rel="stylesheet" href="style.css">
   </head>
   <body>
-    <div id="view_parameters">
+    <div id="view_parameters" class="param_div">
       <label for="view_size">View size</label>
+      <span class="min">512</span>
       <input id="view_size" type="range" min="512" max="1024" step="1" value="512">
+      <span class="max">1024</span>
     </div>
     <br>
-    <div id="initialization_parameters">
+    <div id="initialization_parameters" class="param_div">
       <label for="x_init_min">x min</label>
+      <span class="min">0</span>
       <input id="x_init_min" type="range" min="0" max="256" value="0">
+      <span class="max">256</span>
+
       <label for="x_init_max">x max</label>
+      <span class="min">256</span>
       <input id="x_init_max" type="range" min="256" max="512" value="512">
-      <br>
+      <span class="max">512</span>
+
       <label for="y_init_min">y min</label>
+      <span class="min">0</span>
       <input id="y_init_min" type="range" min="0" max="256" value="0">
+      <span class="max">256</span>
+
       <label for="y_init_max">y max</label>
+      <span class="min">256</span>
       <input id="y_init_max" type="range" min="256" max="512" value="512">
-      <br>
+      <span class="max">512</span>
+
       <label for="z_init_min">z min</label>
+      <span class="min">0</span>
       <input id="z_init_min" type="range" min="0" max="256" value="0">
+      <span class="max">256</span>
+
       <label for="z_init_max">z max</label>
+      <span class="min">256</span>
       <input id="z_init_max" type="range" min="256" max="512" value="512">
-      <br>
+      <span class="max">512</span>
+
       <label for="number_agents">Number of agents</label>
+      <span class="min">1</span>
       <input id="number_agents" type="range" min="1" max="4096" value="50">
+      <span class="max">4096</span>
     </div>
     <br>
-    <div id="model_parameters">
+    <div id="model_parameters" class="param_div">
       <label for="param_dt">dt</label>
+      <span class="min">0.1</span>
       <input id="param_dt" type="range" min="0.1" max="1.0" step="0.1" value="0.3">
-      <br>
+      <span class="max">1</span>
+
       <label for="param_vbar">Max velocity</label>
+      <span class="min">1</span>
       <input id="param_vbar" type="range" min="1" max="20" step="0.1" value="8">
-      <br>
+      <span class="max">20</span>
+
       <label for="param_abar">Max acceleration</label>
+      <span class="min">0.1</span>
       <input id="param_abar" type="range" min="0.1" max="10" step="0.1" value="1">
-      <br>
+      <span class="max">10</span>
+
       <label for="param_eta">Eta (not implemented yet)</label>
+      <span class="min">1</span>
       <input id="param_eta" type="range" min="1" max="3" step="1" value="1">
-      <br>
+      <span class="max">3</span>
+
       <label for="param_lambda">Acceleration cost factor</label>
+      <span class="min">0</span>
       <input id="param_lambda" type="range" min="0" max="2" step="0.1" value="1">
-      <br>
+      <span class="max">2</span>
+
       <label for="param_omega">Distance cost factor</label>
+      <span class="min">0</span>
       <input id="param_omega" type="range" min="0" max="300" step="0.1" value="30">
-      <br>
+      <span class="max">300</span>
+
       <label for="param_predator_constant">Predator cost factor</label>
+      <span class="min">0</span>
       <input id="param_predator_constant" type="range" min="0" max="100000" step="10" value="10000">
-      <br>
+      <span class="max">100000</span>
+
       <label for="param_neighbor_count">Max neighbor count</label>
+      <span class="min">0</span>
       <input id="param_neighbor_count" type="range" min="0" max="16" step="1" value="7">
-      <br>
+      <span class="max">16</span>
+
       <label for="param_neighbor_radius">Max neighbor radius</label>
+      <span class="min">0</span>
       <input id="param_neighbor_radius" type="range" min="0" max="1000" step="0.1" value="8.4">
-      <br>
+      <span class="max">1000</span>
+
       <label for="param_collision_distance">Distance to count as a collision</label>
+      <span class="min">0</span>
       <input id="param_collision_distance" type="range" min="0" max="10" step="0.1" value="1">
+      <span class="max">10</span>
     </div>
     <br>
     <input id="restart_button" type="button" value="restart">
