@@ -26,7 +26,7 @@ void main() {
     }
 
     vec4 current_agent_tex = texture(agents_texture, cc);
-    vec3 current_agent_pos = vec3(current_agent_tex.r, current_agent_tex.g, current_agent_tex.b);
+    vec3 current_agent_pos = current_agent_tex.xyz;
 
     int current_agent_x = int(floor(cc.x * 64.0));
     int current_agent_y = int(floor(cc.y * 64.0));
@@ -51,7 +51,7 @@ void main() {
         // / 64
         int i_y = i >> 6;
         vec4 agent_texel = texelFetch(agents_texture, ivec2(i_x, i_y), 0);
-        vec3 agent_pos = vec3(agent_texel.r, agent_texel.g, agent_texel.b);
+        vec3 agent_pos = agent_texel.xyz;
 
         float d = distance(current_agent_pos, agent_pos);
 

@@ -40,8 +40,8 @@ void main() {
         return;
     }
 
-    vec3 v = vec3(v_tex.r, v_tex.g, v_tex.b);
-    vec3 x = vec3(x_tex.r, x_tex.g, x_tex.b);
+    vec3 v = v_tex.xyz;
+    vec3 x = x_tex.xyz;
 
     vec4 n0_tex = texture(neighbor_texture_0, cc);
     vec4 n1_tex = texture(neighbor_texture_1, cc);
@@ -68,10 +68,10 @@ void main() {
     int neighbors_to_check = min(neighbor_count, neighbors.length());
     int num_walls = walls.length();
 
-    vec3 predator = vec3(predator_position.x * region_width, predator_position.y * region_height, predator_position.z * region_depth);
+    vec3 predator = predator_position.xyz * vec3(region_width, region_height, region_depth);
 
     // Use gradient descent to find the acceleration
-    vec3 a = vec3(0.0, 0.0, 0.0);
+    vec3 a = vec3(0.0);
     for (int i = 0; i < 1000; ++i) {
         vec3 xi = x + dt * v + dt * dt * a;
 
@@ -83,9 +83,9 @@ void main() {
         walls[4] = vec3(xi.x, xi.y, 0.0);
         walls[5] = vec3(xi.x, xi.y, region_depth);
 
-        vec3 xj = vec3(0.0, 0.0, 0.0);
-        vec3 aggregation = vec3(0.0, 0.0, 0.0);
-        vec3 separation = vec3(0.0, 0.0, 0.0);
+        vec3 xj = vec3(0.0);
+        vec3 aggregation = vec3(0.0);
+        vec3 separation = vec3(0.0);
         int N = 0;
         for (int n = 0; n < neighbors_to_check; ++n) {
             if (neighbors[n] >= num_agents) {
@@ -100,8 +100,8 @@ void main() {
             vec4 nx_tex = texelFetch(agents_texture, n_index, 0);
             vec4 nv_tex = texelFetch(velocity_texture, n_index, 0);
 
-            vec3 nx = vec3(nx_tex.r, nx_tex.g, nx_tex.b);
-            vec3 nv = vec3(nv_tex.r, nv_tex.g, nv_tex.b);
+            vec3 nx = nx_tex.xyz;
+            vec3 nv = nv_tex.xyz;
 
             xj = nx + dt * nv;
 
@@ -159,5 +159,5 @@ void main() {
     x += dt * v;
 
     velocity_out_texture = vec4(v.x, v.y, v.z, 0.0);
-    agents_out_texture = vec4(mod(x.x, region_width), mod(x.y, region_height), mod(x.z, region_depth), 0.0);
+    agents_out_texture = vec4(mod(x.x + region_width, region_width), mod(x.y + region_height, region_height), mod(x.z + region_depth, region_depth), 0.0);
 }
