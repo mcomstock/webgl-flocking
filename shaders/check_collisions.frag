@@ -27,7 +27,7 @@ void main() {
     vec4 x_tex = texture(agents_texture, cc);
     vec4 n_tex = texture(neighbor_texture_0, cc);
 
-    vec2 x = vec2(x_tex.r, x_tex.g);
+    vec3 x = vec3(x_tex.r, x_tex.g, x_tex.b);
 
     // Only compare with the nearest neighbor
     int n_ind = int(n_tex.r);
@@ -40,7 +40,7 @@ void main() {
     int n_ind_y = n_ind >> 6;
 
     vec4 n = texelFetch(agents_texture, ivec2(n_ind_x, n_ind_y), 0);
-    vec2 nx = vec2(n.r, n.g);
+    vec3 nx = vec3(n.r, n.g, n.b);
 
     if (distance(x, nx) < collision_distance) {
         collision_texture = vec4(1.0, 0.0, 0.0, 0.0);

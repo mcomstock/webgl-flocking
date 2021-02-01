@@ -49,7 +49,7 @@ require([
     event: 'drag',
     callback: (event) => {
       shaders.agent_update_solver.uniforms.predator_active.value = 1;
-      shaders.agent_update_solver.uniforms.predator_position.value = event.position;
+      shaders.agent_update_solver.uniforms.predator_position.value = [...event.position, 256.0];
     },
   });
 

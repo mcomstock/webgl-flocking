@@ -6,7 +6,7 @@ precision highp int;
 in vec2 cc;
 
 uniform int num_agents;
-uniform float region_width, region_height, neighbor_radius;
+uniform float neighbor_radius;
 uniform sampler2D agents_texture;
 
 #define BIG_FLOAT 1.0e+10
@@ -26,7 +26,7 @@ void main() {
     }
 
     vec4 current_agent_tex = texture(agents_texture, cc);
-    vec2 current_agent_pos = vec2(current_agent_tex.r, current_agent_tex.g);
+    vec3 current_agent_pos = vec3(current_agent_tex.r, current_agent_tex.g, current_agent_tex.b);
 
     int current_agent_x = int(floor(cc.x * 64.0));
     int current_agent_y = int(floor(cc.y * 64.0));
@@ -51,7 +51,7 @@ void main() {
         // / 64
         int i_y = i >> 6;
         vec4 agent_texel = texelFetch(agents_texture, ivec2(i_x, i_y), 0);
-        vec2 agent_pos = vec2(agent_texel.r, agent_texel.g);
+        vec3 agent_pos = vec3(agent_texel.r, agent_texel.g, agent_texel.b);
 
         float d = distance(current_agent_pos, agent_pos);
 

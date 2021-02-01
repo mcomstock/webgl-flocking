@@ -20,6 +20,7 @@ define('scripts/shaders', [
 
       this.region_width = 512;
       this.region_height = 512;
+      this.region_depth = 512;
 
       // Shader code depends on these specific values
       this.agent_width = 64;
@@ -55,6 +56,8 @@ define('scripts/shaders', [
       this.x_max = parseFloat(this.flocking_interface.x_max.value);
       this.y_min = parseFloat(this.flocking_interface.y_min.value);
       this.y_max = parseFloat(this.flocking_interface.y_max.value);
+      this.z_min = parseFloat(this.flocking_interface.z_min.value);
+      this.z_max = parseFloat(this.flocking_interface.z_max.value);
     }
 
     createAgentTextures() {
@@ -87,8 +90,8 @@ define('scripts/shaders', [
         agent_array[p] = this.y_min + Math.random() * (this.y_max - this.y_min);
         velocity_array[p++] = (Math.random() - 0.5) * 4.0;
 
-        agent_array[p] = 0.0;
-        velocity_array[p++] = 0.0;
+        agent_array[p] = this.z_min + Math.random() * (this.z_max - this.z_min);
+        velocity_array[p++] = (Math.random() - 0.5) * 4.0;
 
         agent_array[p] = 0.0;
         velocity_array[p++] = 0.0;
@@ -110,14 +113,6 @@ define('scripts/shaders', [
           agents_texture: {
             type: 't',
             value: this.agents_texture,
-          },
-          region_width: {
-            type: 'f',
-            value: this.region_width,
-          },
-          region_height: {
-            type: 'f',
-            value: this.region_height,
           },
           neighbor_radius: {
             type: 'f',
@@ -185,6 +180,10 @@ define('scripts/shaders', [
             type: 'f',
             value: this.region_height,
           },
+          region_depth: {
+            type: 'f',
+            value: this.region_depth,
+          },
           dt: {
             type: 'f',
             value: this.flocking_interface.dt.value,
@@ -219,8 +218,8 @@ define('scripts/shaders', [
             value: 0,
           },
           predator_position: {
-            type: 'v2',
-            value: [0.0, 0.0],
+            type: 'v3',
+            value: [0.0, 0.0, 0.0],
           },
           neighbor_count: {
             type: 'i',

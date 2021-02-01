@@ -8,10 +8,10 @@ in vec2 cc;
 uniform sampler2D agents_texture, velocity_texture;
 uniform sampler2D neighbor_texture_0, neighbor_texture_1, neighbor_texture_2, neighbor_texture_3;
 
-uniform float dt, vbar, abar, eta, lambda, omega, region_width, region_height, predator_constant;
+uniform float dt, vbar, abar, eta, lambda, omega, region_width, region_height, region_depth, predator_constant;
 uniform int num_agents, neighbor_count;
 uniform bool predator_active;
-uniform vec2 predator_position;
+uniform vec3 predator_position;
 
 layout (location = 0) out vec4 agents_out_texture;
 layout (location = 1) out vec4 velocity_out_texture;
@@ -21,7 +21,7 @@ float gamma = 0.05;
 
 int neighbors[16];
 
-vec2 walls[4];
+vec3 walls[6];
 
 // The range at which to start caring about the walls
 float sq_wall_dist_range = 20.0 * 20.0;
@@ -40,8 +40,8 @@ void main() {
         return;
     }
 
-    vec2 v = vec2(v_tex.r, v_tex.g);
-    vec2 x = vec2(x_tex.r, x_tex.g);
+    vec3 v = vec3(v_tex.r, v_tex.g, v_tex.b);
+    vec3 x = vec3(x_tex.r, x_tex.g, x_tex.b);
 
     vec4 n0_tex = texture(neighbor_texture_0, cc);
     vec4 n1_tex = texture(neighbor_texture_1, cc);
@@ -68,22 +68,24 @@ void main() {
     int neighbors_to_check = min(neighbor_count, neighbors.length());
     int num_walls = walls.length();
 
-    vec2 predator = vec2(predator_position.x * region_width, predator_position.y * region_height);
+    vec3 predator = vec3(predator_position.x * region_width, predator_position.y * region_height, predator_position.z * region_depth);
 
     // Use gradient descent to find the acceleration
-    vec2 a = vec2(0.0, 0.0);
+    vec3 a = vec3(0.0, 0.0, 0.0);
     for (int i = 0; i < 1000; ++i) {
-        vec2 xi = x + dt * v + dt * dt * a;
+        vec3 xi = x + dt * v + dt * dt * a;
 
         // Nearest position on each wall
-        walls[0] = vec2(0.0, xi.y);
-        walls[1] = vec2(region_width, xi.y);
-        walls[2] = vec2(xi.x, 0.0);
-        walls[3] = vec2(xi.x, region_height);
+        walls[0] = vec3(0.0, xi.y, xi.z);
+        walls[1] = vec3(region_width, xi.y, xi.z);
+        walls[2] = vec3(xi.x, 0.0, xi.z);
+        walls[3] = vec3(xi.x, region_height, xi.z);
+        walls[4] = vec3(xi.x, xi.y, 0.0);
+        walls[5] = vec3(xi.x, xi.y, region_depth);
 
-        vec2 xj = vec2(0.0, 0.0);
-        vec2 aggregation = vec2(0.0, 0.0);
-        vec2 separation = vec2(0.0, 0.0);
+        vec3 xj = vec3(0.0, 0.0, 0.0);
+        vec3 aggregation = vec3(0.0, 0.0, 0.0);
+        vec3 separation = vec3(0.0, 0.0, 0.0);
         int N = 0;
         for (int n = 0; n < neighbors_to_check; ++n) {
             if (neighbors[n] >= num_agents) {
@@ -98,8 +100,8 @@ void main() {
             vec4 nx_tex = texelFetch(agents_texture, n_index, 0);
             vec4 nv_tex = texelFetch(velocity_texture, n_index, 0);
 
-            vec2 nx = vec2(nx_tex.r, nx_tex.g);
-            vec2 nv = vec2(nv_tex.r, nv_tex.g);
+            vec3 nx = vec3(nx_tex.r, nx_tex.g, nx_tex.b);
+            vec3 nv = vec3(nv_tex.r, nv_tex.g, nv_tex.b);
 
             xj = nx + dt * nv;
 
@@ -109,23 +111,23 @@ void main() {
 
             ++N;
 
-            vec2 xij = xi - xj;
+            vec3 xij = xi - xj;
             float sqdist = dot(xij, xij);
 
-            vec2 dxij = 2.0 * xij * dt * dt;
+            vec3 dxij = 2.0 * xij * dt * dt;
 
             aggregation += dxij;
             separation += dxij / (sqdist * sqdist);
         }
 
         if (N != 0) {
-            vec2 regularization = a;
+            vec3 regularization = a;
             a -= (aggregation / float(N) - omega * separation + 2.0 * lambda * regularization);
         }
 
         // Avoid the walls if too close
         for (int w = 0; w < num_walls; ++w) {
-            vec2 w_dist = xi - walls[w];
+            vec3 w_dist = xi - walls[w];
             float sq_w_dist = dot(w_dist, w_dist);
 
             if (sq_w_dist < sq_wall_dist_range) {
@@ -135,7 +137,7 @@ void main() {
 
         // Avoid the predator
         if (predator_active) {
-            vec2 xip = xi - predator;
+            vec3 xip = xi - predator;
             float sqdist = dot(xip, xip);
             a += predator_constant * 2.0 * xip * dt * dt / (sqdist * sqdist);
         }
@@ -156,6 +158,6 @@ void main() {
 
     x += dt * v;
 
-    velocity_out_texture = vec4(v.x, v.y, 0.0, 0.0);
-    agents_out_texture = vec4(mod(x.x, region_width), mod(x.y, region_height), 0.0, 0.0);
+    velocity_out_texture = vec4(v.x, v.y, v.z, 0.0);
+    agents_out_texture = vec4(mod(x.x, region_width), mod(x.y, region_height), mod(x.z, region_depth), 0.0);
 }
