@@ -13,15 +13,13 @@ uniform sampler2D agents_texture;
 
 layout (location = 0) out vec4 neighbor_texture_0;
 layout (location = 1) out vec4 neighbor_texture_1;
-layout (location = 2) out vec4 neighbor_texture_2;
-layout (location = 3) out vec4 neighbor_texture_3;
 
-float neighbors[16];
+int neighbors[16];
 float distances[16];
 
 void main() {
     for (int i = 0; i < neighbors.length(); ++i) {
-        neighbors[i] = float(num_agents);
+        neighbors[i] = num_agents;
         distances[i] = BIG_FLOAT;
     }
 
@@ -33,10 +31,10 @@ void main() {
     int current_agent_idx = 64 * current_agent_y + current_agent_x;
 
     if (current_agent_idx >= num_agents) {
-        neighbor_texture_0 = vec4(num_agents, num_agents, num_agents, num_agents);
-        neighbor_texture_1 = vec4(num_agents, num_agents, num_agents, num_agents);
-        neighbor_texture_2 = vec4(num_agents, num_agents, num_agents, num_agents);
-        neighbor_texture_3 = vec4(num_agents, num_agents, num_agents, num_agents);
+        float num_agents_packed = intBitsToFloat((num_agents << 16) | num_agents);
+
+        neighbor_texture_0 = vec4(num_agents_packed, num_agents_packed, num_agents_packed, num_agents_packed);
+        neighbor_texture_1 = vec4(num_agents_packed, num_agents_packed, num_agents_packed, num_agents_packed);
         return;
     }
 
@@ -66,7 +64,7 @@ void main() {
                     distances[k] = distances[k-1];
                 }
 
-                neighbors[j] = float(i);
+                neighbors[j] = i;
                 distances[j] = d;
 
                 break;
@@ -74,8 +72,17 @@ void main() {
         }
     }
 
-    neighbor_texture_0 = vec4(neighbors[0], neighbors[1], neighbors[2], neighbors[3]);
-    neighbor_texture_1 = vec4(neighbors[4], neighbors[5], neighbors[6], neighbors[7]);
-    neighbor_texture_2 = vec4(neighbors[8], neighbors[9], neighbors[10], neighbors[11]);
-    neighbor_texture_3 = vec4(neighbors[12], neighbors[13], neighbors[14], neighbors[15]);
+    neighbor_texture_0 = vec4(
+        intBitsToFloat((neighbors[1] << 16) | neighbors[0]),
+        intBitsToFloat((neighbors[3] << 16) | neighbors[2]),
+        intBitsToFloat((neighbors[5] << 16) | neighbors[4]),
+        intBitsToFloat((neighbors[7] << 16) | neighbors[6])
+    );
+
+    neighbor_texture_1 = vec4(
+        intBitsToFloat((neighbors[9] << 16) | neighbors[8]),
+        intBitsToFloat((neighbors[11] << 16) | neighbors[10]),
+        intBitsToFloat((neighbors[13] << 16) | neighbors[12]),
+        intBitsToFloat((neighbors[15] << 16) | neighbors[14])
+    );
 }

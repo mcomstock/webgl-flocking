@@ -5,8 +5,8 @@ precision highp int;
 
 in vec2 cc;
 
-uniform sampler2D agents_texture, velocity_texture;
-uniform sampler2D neighbor_texture_0, neighbor_texture_1, neighbor_texture_2, neighbor_texture_3;
+uniform sampler2D agents_texture, velocity_texture, predicted_position_texture;
+uniform sampler2D neighbor_texture_0, neighbor_texture_1;
 
 uniform float dt, vbar, abar, eta, lambda, omega, region_width, region_height, region_depth, predator_constant;
 uniform int num_agents, neighbor_count;
@@ -45,25 +45,23 @@ void main() {
 
     vec4 n0_tex = texture(neighbor_texture_0, cc);
     vec4 n1_tex = texture(neighbor_texture_1, cc);
-    vec4 n2_tex = texture(neighbor_texture_2, cc);
-    vec4 n3_tex = texture(neighbor_texture_3, cc);
 
-    neighbors[0] = int(n0_tex.r);
-    neighbors[1] = int(n0_tex.g);
-    neighbors[2] = int(n0_tex.b);
-    neighbors[3] = int(n0_tex.a);
-    neighbors[4] = int(n1_tex.r);
-    neighbors[5] = int(n1_tex.g);
-    neighbors[6] = int(n1_tex.b);
-    neighbors[7] = int(n1_tex.a);
-    neighbors[8] = int(n2_tex.r);
-    neighbors[9] = int(n2_tex.g);
-    neighbors[10] = int(n2_tex.b);
-    neighbors[11] = int(n2_tex.a);
-    neighbors[12] = int(n3_tex.r);
-    neighbors[13] = int(n3_tex.g);
-    neighbors[14] = int(n3_tex.b);
-    neighbors[15] = int(n3_tex.a);
+    neighbors[0] = int(floatBitsToInt(n0_tex.r) & 65535);
+    neighbors[1] = int(floatBitsToInt(n0_tex.r) >> 16);
+    neighbors[2] = int(floatBitsToInt(n0_tex.g) & 65535);
+    neighbors[3] = int(floatBitsToInt(n0_tex.g) >> 16);
+    neighbors[4] = int(floatBitsToInt(n0_tex.b) & 65535);
+    neighbors[5] = int(floatBitsToInt(n0_tex.b) >> 16);
+    neighbors[6] = int(floatBitsToInt(n0_tex.a) & 65535);
+    neighbors[7] = int(floatBitsToInt(n0_tex.a) >> 16);
+    neighbors[8] = int(floatBitsToInt(n1_tex.r) & 65535);
+    neighbors[9] = int(floatBitsToInt(n1_tex.r) >> 16);
+    neighbors[10] = int(floatBitsToInt(n1_tex.g) & 65535);
+    neighbors[11] = int(floatBitsToInt(n1_tex.g) >> 16);
+    neighbors[12] = int(floatBitsToInt(n1_tex.b) & 65535);
+    neighbors[13] = int(floatBitsToInt(n1_tex.b) >> 16);
+    neighbors[14] = int(floatBitsToInt(n1_tex.a) & 65535);
+    neighbors[15] = int(floatBitsToInt(n1_tex.a) >> 16);
 
     int neighbors_to_check = min(neighbor_count, neighbors.length());
     int num_walls = walls.length();
@@ -96,14 +94,7 @@ void main() {
             int ind_x = neighbors[n] & 63;
             // / 64
             int ind_y = neighbors[n] >> 6;
-            ivec2 n_index = ivec2(ind_x, ind_y);
-            vec4 nx_tex = texelFetch(agents_texture, n_index, 0);
-            vec4 nv_tex = texelFetch(velocity_texture, n_index, 0);
-
-            vec3 nx = nx_tex.xyz;
-            vec3 nv = nv_tex.xyz;
-
-            xj = nx + dt * nv;
+            xj = texelFetch(predicted_position_texture, ivec2(ind_x, ind_y), 0).xyz;
 
             if (xi == xj) {
                 continue;
@@ -159,5 +150,11 @@ void main() {
     x += dt * v;
 
     velocity_out_texture = vec4(v.x, v.y, v.z, 0.0);
-    agents_out_texture = vec4(mod(x.x + region_width, region_width), mod(x.y + region_height, region_height), mod(x.z + region_depth, region_depth), 0.0);
+
+    agents_out_texture = vec4(
+        mod(x.x + region_width, region_width),
+        mod(x.y + region_height, region_height),
+        mod(x.z + region_depth, region_depth),
+        0.0
+    );
 }

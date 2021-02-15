@@ -27,10 +27,8 @@ void main() {
     vec4 x_tex = texture(agents_texture, cc);
     vec4 n_tex = texture(neighbor_texture_0, cc);
 
-    vec3 x = vec3(x_tex.r, x_tex.g, x_tex.b);
-
     // Only compare with the nearest neighbor
-    int n_ind = int(n_tex.r);
+    int n_ind = int(floatBitsToInt(n_tex.r) & 65535);
 
     if (n_ind >= num_agents) {
         return;
@@ -40,9 +38,8 @@ void main() {
     int n_ind_y = n_ind >> 6;
 
     vec4 n = texelFetch(agents_texture, ivec2(n_ind_x, n_ind_y), 0);
-    vec3 nx = vec3(n.r, n.g, n.b);
 
-    if (distance(x, nx) < collision_distance) {
+    if (distance(x_tex, n) < collision_distance) {
         collision_texture = vec4(1.0, 0.0, 0.0, 0.0);
     }
 }
