@@ -34,7 +34,7 @@ require([
 
   function run() {
     shaders.runOneIteration();
-    display.updatePositionBuffer(shaders.agents_texture.value);
+    display.updatePositionBuffer(shaders.agent_texture.value);
     display.drawScene();
 
     var collisions = shaders.collision_texture.value.reduce((a, b) => a + b, 0);

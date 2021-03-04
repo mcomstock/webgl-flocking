@@ -7,7 +7,7 @@ in vec2 cc;
 
 uniform int num_agents;
 uniform float neighbor_radius;
-uniform sampler2D agents_texture;
+uniform sampler2D agent_texture;
 
 #define BIG_FLOAT 1.0e+10
 
@@ -23,7 +23,7 @@ void main() {
         distances[i] = BIG_FLOAT;
     }
 
-    vec4 current_agent_tex = texture(agents_texture, cc);
+    vec4 current_agent_tex = texture(agent_texture, cc);
     vec3 current_agent_pos = current_agent_tex.xyz;
 
     int current_agent_x = int(floor(cc.x * 64.0));
@@ -33,8 +33,8 @@ void main() {
     if (current_agent_idx >= num_agents) {
         float num_agents_packed = intBitsToFloat((num_agents << 16) | num_agents);
 
-        neighbor_texture_0 = vec4(num_agents_packed, num_agents_packed, num_agents_packed, num_agents_packed);
-        neighbor_texture_1 = vec4(num_agents_packed, num_agents_packed, num_agents_packed, num_agents_packed);
+        neighbor_texture_0 = vec4(num_agents_packed);
+        neighbor_texture_1 = vec4(num_agents_packed);
         return;
     }
 
@@ -48,7 +48,7 @@ void main() {
         int i_x = i & 63;
         // / 64
         int i_y = i >> 6;
-        vec4 agent_texel = texelFetch(agents_texture, ivec2(i_x, i_y), 0);
+        vec4 agent_texel = texelFetch(agent_texture, ivec2(i_x, i_y), 0);
         vec3 agent_pos = agent_texel.xyz;
 
         float d = distance(current_agent_pos, agent_pos);
