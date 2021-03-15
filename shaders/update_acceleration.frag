@@ -15,7 +15,6 @@ uniform bool predator_active;
 uniform vec3 predator_position;
 
 layout (location = 0) out vec4 acceleration_texture;
-layout (location = 1) out vec4 first_neighbor;
 
 // Hyperparameter for gradient descent
 float gamma = 0.05;
@@ -57,8 +56,6 @@ void main() {
     neighbors[13] = int(n1_tex.b >> 16);
     neighbors[14] = int(n1_tex.a & 65535u);
     neighbors[15] = int(n1_tex.a >> 16);
-
-    first_neighbor = vec4(x, 0.0);
 
     int neighbors_to_check = min(neighbor_count, neighbors.length());
     int num_walls = walls.length();

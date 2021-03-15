@@ -81,10 +81,8 @@ define('scripts/shaders', [
     }
 
     createNeighborTextures() {
-      this.neighbor_texture_0 = new Abubu.Uint32Texture(this.agent_width, this.agent_height, { pairable: true, magFilter: 'nearest', minFilter: 'nearest' });
-      this.neighbor_texture_1 = new Abubu.Uint32Texture(this.agent_width, this.agent_height, { pairable: true, magFilter: 'nearest', minFilter: 'nearest' });
-
-      this.first_neighbor = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
+      this.neighbor_texture_0 = new Abubu.Uint32Texture(this.agent_width, this.agent_height, { pairable: true });
+      this.neighbor_texture_1 = new Abubu.Uint32Texture(this.agent_width, this.agent_height, { pairable: true });
     }
 
     initializeAgents() {
@@ -243,10 +241,6 @@ define('scripts/shaders', [
             location: 0,
             target: this.acceleration_texture,
           },
-          first_neighbor: {
-            location: 1,
-            target: this.first_neighbor,
-          },
         },
       });
     }
@@ -361,10 +355,6 @@ define('scripts/shaders', [
             location: 0,
             target: this.collision_texture,
           },
-          // first_neighbor: {
-          //   location: 1,
-          //   target: this.first_neighbor,
-          // },
         },
       });
     }
@@ -426,9 +416,6 @@ define('scripts/shaders', [
     }
 
     runOneIteration() {
-      // debugger;
-      // console.log(new Set([...this.first_neighbor.value]));
-      // console.log(this.flocking_interface.number_agents.value);
       this.neighbor_solver.render();
       this.predict_movement_solver.render();
       this.update_acceleration_solver.render();

@@ -13,7 +13,6 @@ uniform int num_agents;
 uniform float region_width, region_height, collision_distance;
 
 layout (location = 0) out vec4 collision_texture;
-// layout (location = 1) out vec4 first_neighbor;
 
 void main() {
     collision_texture = vec4(0.0, 0.0, 0.0, 0.0);
@@ -40,8 +39,6 @@ void main() {
     int n_ind_y = n_ind >> 6;
 
     vec4 n = texelFetch(agent_texture, ivec2(n_ind_x, n_ind_y), 0);
-
-    // first_neighbor = vec4(n_ind);
 
     if (distance(x_tex, n) < collision_distance) {
         collision_texture = vec4(1.0, 0.0, 0.0, 0.0);
