@@ -2,11 +2,12 @@
 
 precision highp float;
 precision highp int;
+precision highp usampler2D;
 
 in vec2 cc;
 
 uniform sampler2D agent_texture;
-uniform sampler2D neighbor_texture_0;
+uniform usampler2D neighbor_texture_0;
 
 uniform int num_agents;
 uniform float region_width, region_height, collision_distance;
@@ -26,10 +27,10 @@ void main() {
     }
 
     vec4 x_tex = texture(agent_texture, cc);
-    vec4 n_tex = texture(neighbor_texture_0, cc);
+    uvec4 n_tex = texture(neighbor_texture_0, cc);
 
     // Only compare with the nearest neighbor
-    int n_ind = int(floatBitsToInt(n_tex.r) & 65535);
+    int n_ind = int(n_tex.r & 65535u);
 
     if (n_ind >= num_agents) {
         return;

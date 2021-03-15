@@ -70,7 +70,7 @@ define('scripts/shaders', [
       this.agent_texture = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
       this.agent_out_texture = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
 
-      this.predicted_position_texture = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true});
+      this.predicted_position_texture = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
 
       this.velocity_texture = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
       this.velocity_out_texture = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
@@ -81,8 +81,8 @@ define('scripts/shaders', [
     }
 
     createNeighborTextures() {
-      this.neighbor_texture_0 = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
-      this.neighbor_texture_1 = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
+      this.neighbor_texture_0 = new Abubu.Uint32Texture(this.agent_width, this.agent_height, { pairable: true, magFilter: 'nearest', minFilter: 'nearest' });
+      this.neighbor_texture_1 = new Abubu.Uint32Texture(this.agent_width, this.agent_height, { pairable: true, magFilter: 'nearest', minFilter: 'nearest' });
 
       this.first_neighbor = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
     }
@@ -172,9 +172,9 @@ define('scripts/shaders', [
       this.update_acceleration_solver = new Abubu.Solver({
         fragmentShader: UpdateAccelerationShader,
         uniforms: {
-          num_agents: {
-            type: 'i',
-            value: this.flocking_interface.number_agents.value,
+          predicted_position_texture: {
+            type: 't',
+            value: this.predicted_position_texture,
           },
           neighbor_texture_0: {
             type: 't',
@@ -184,9 +184,9 @@ define('scripts/shaders', [
             type: 't',
             value: this.neighbor_texture_1,
           },
-          predicted_position_texture: {
-            type: 't',
-            value: this.predicted_position_texture,
+          num_agents: {
+            type: 'i',
+            value: this.flocking_interface.number_agents.value,
           },
           region_width: {
             type: 'f',
@@ -427,7 +427,7 @@ define('scripts/shaders', [
 
     runOneIteration() {
       // debugger;
-      console.log(new Set([...this.first_neighbor.value]));
+      // console.log(new Set([...this.first_neighbor.value]));
       // console.log(this.flocking_interface.number_agents.value);
       this.neighbor_solver.render();
       this.predict_movement_solver.render();

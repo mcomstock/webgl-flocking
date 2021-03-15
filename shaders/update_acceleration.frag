@@ -2,11 +2,12 @@
 
 precision highp float;
 precision highp int;
+precision highp usampler2D;
 
 in vec2 cc;
 
 uniform sampler2D predicted_position_texture;
-uniform sampler2D neighbor_texture_0, neighbor_texture_1;
+uniform usampler2D neighbor_texture_0, neighbor_texture_1;
 
 uniform float dt, abar, eta, lambda, omega, region_width, region_height, region_depth, predator_constant;
 uniform int num_agents, neighbor_count;
@@ -37,27 +38,27 @@ void main() {
         return;
     }
 
-    vec4 n0_tex = texture(neighbor_texture_0, cc);
-    vec4 n1_tex = texture(neighbor_texture_1, cc);
+    uvec4 n0_tex = texture(neighbor_texture_0, cc);
+    uvec4 n1_tex = texture(neighbor_texture_1, cc);
 
-    neighbors[0] = int(floatBitsToInt(n0_tex.r) & 65535);
-    neighbors[1] = int(floatBitsToInt(n0_tex.r) >> 16);
-    neighbors[2] = int(floatBitsToInt(n0_tex.g) & 65535);
-    neighbors[3] = int(floatBitsToInt(n0_tex.g) >> 16);
-    neighbors[4] = int(floatBitsToInt(n0_tex.b) & 65535);
-    neighbors[5] = int(floatBitsToInt(n0_tex.b) >> 16);
-    neighbors[6] = int(floatBitsToInt(n0_tex.a) & 65535);
-    neighbors[7] = int(floatBitsToInt(n0_tex.a) >> 16);
-    neighbors[8] = int(floatBitsToInt(n1_tex.r) & 65535);
-    neighbors[9] = int(floatBitsToInt(n1_tex.r) >> 16);
-    neighbors[10] = int(floatBitsToInt(n1_tex.g) & 65535);
-    neighbors[11] = int(floatBitsToInt(n1_tex.g) >> 16);
-    neighbors[12] = int(floatBitsToInt(n1_tex.b) & 65535);
-    neighbors[13] = int(floatBitsToInt(n1_tex.b) >> 16);
-    neighbors[14] = int(floatBitsToInt(n1_tex.a) & 65535);
-    neighbors[15] = int(floatBitsToInt(n1_tex.a) >> 16);
+    neighbors[0] = int(n0_tex.r & 65535u);
+    neighbors[1] = int(n0_tex.r >> 16);
+    neighbors[2] = int(n0_tex.g & 65535u);
+    neighbors[3] = int(n0_tex.g >> 16);
+    neighbors[4] = int(n0_tex.b & 65535u);
+    neighbors[5] = int(n0_tex.b >> 16);
+    neighbors[6] = int(n0_tex.a & 65535u);
+    neighbors[7] = int(n0_tex.a >> 16);
+    neighbors[8] = int(n1_tex.r & 65535u);
+    neighbors[9] = int(n1_tex.r >> 16);
+    neighbors[10] = int(n1_tex.g & 65535u);
+    neighbors[11] = int(n1_tex.g >> 16);
+    neighbors[12] = int(n1_tex.b & 65535u);
+    neighbors[13] = int(n1_tex.b >> 16);
+    neighbors[14] = int(n1_tex.a & 65535u);
+    neighbors[15] = int(n1_tex.a >> 16);
 
-    first_neighbor = vec4(neighbors[0]);
+    first_neighbor = vec4(x, 0.0);
 
     int neighbors_to_check = min(neighbor_count, neighbors.length());
     int num_walls = walls.length();
