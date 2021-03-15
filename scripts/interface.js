@@ -26,11 +26,15 @@ define('scripts/interface', [], function() {
       this.lambda = document.getElementById('param_lambda');
       this.omega = document.getElementById('param_omega');
       this.predator_constant = document.getElementById('param_predator_constant');
+      this.center = document.getElementById('param_center');
       this.neighbor_count = document.getElementById('param_neighbor_count');
       this.neighbor_radius = document.getElementById('param_neighbor_radius');
       this.collision_distance = document.getElementById('param_collision_distance');
 
       this.model_parameters = document.getElementById('model_parameters');
+
+      this.log_attraction = document.getElementById('log_attraction');
+      this.toggle_parameters = document.getElementById('toggle_parameters');
     }
 
     static getWidth(element) {

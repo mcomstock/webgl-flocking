@@ -218,6 +218,14 @@ define('scripts/shaders', [
             type: 'f',
             value: this.flocking_interface.omega.value,
           },
+          center_pull: {
+            type: 'f',
+            value: this.flocking_interface.center.value,
+          },
+          log_attraction: {
+            type: 'f',
+            value: this.flocking_interface.log_attraction.checked ? 1.0 : 0.0,
+          },
           predator_constant: {
             type: 'f',
             value: this.flocking_interface.predator_constant.value,
@@ -375,6 +383,8 @@ define('scripts/shaders', [
       this.update_acceleration_solver.uniforms.eta.value = this.flocking_interface.eta.value;
       this.update_acceleration_solver.uniforms.lambda.value = this.flocking_interface.lambda.value;
       this.update_acceleration_solver.uniforms.omega.value = this.flocking_interface.omega.value;
+      this.update_acceleration_solver.uniforms.center_pull.value = this.flocking_interface.center.value;
+      this.update_acceleration_solver.uniforms.log_attraction.value = this.flocking_interface.log_attraction.checked ? 1.0 : 0.0;
       this.update_acceleration_solver.uniforms.predator_constant.value = this.flocking_interface.predator_constant.value;
       this.update_acceleration_solver.uniforms.neighbor_count.value = this.flocking_interface.neighbor_count.value;
     }

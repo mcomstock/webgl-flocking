@@ -10,6 +10,7 @@ uniform sampler2D predicted_position_texture;
 uniform usampler2D neighbor_texture_0, neighbor_texture_1;
 
 uniform float dt, abar, eta, lambda, omega, region_width, region_height, region_depth, predator_constant;
+uniform float log_attraction, center_pull;
 uniform int num_agents, neighbor_count;
 uniform bool predator_active;
 uniform vec3 predator_position;
@@ -78,6 +79,7 @@ void main() {
         vec3 xj = vec3(0.0);
         vec3 aggregation = vec3(0.0);
         vec3 separation = vec3(0.0);
+        vec3 center = vec3(0.0);
         int N = 0;
         for (int n = 0; n < neighbors_to_check; ++n) {
             if (neighbors[n] >= num_agents) {
@@ -101,7 +103,9 @@ void main() {
 
             vec3 dxij = 2.0 * xij * dt * dt;
 
-            aggregation += dxij;
+            aggregation += (1.0 - log_attraction) * dxij;
+            aggregation += log_attraction * 20.0 * dxij / sqdist;
+
             separation += dxij / (sqdist * sqdist);
         }
 
@@ -109,6 +113,11 @@ void main() {
             vec3 regularization = a;
             a -= gamma * (aggregation / float(N) - omega * separation + 2.0 * lambda * regularization);
         }
+
+        vec3 dc = xi - vec3(256.0, 256.0, 256.0);
+        center = dc / dot(dc, dc);
+
+        a -= gamma * center_pull * center;
 
         // Avoid the walls if too close
         for (int w = 0; w < num_walls; ++w) {

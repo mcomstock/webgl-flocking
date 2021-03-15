@@ -67,6 +67,7 @@ require([
     display.setAgentCount(flocking_interface.number_agents.value);
   });
   flocking_interface.model_parameters.addEventListener('change', () => shaders.updateAllSolvers());
+  flocking_interface.toggle_parameters.addEventListener('change', () => shaders.updateAllSolvers());
   flocking_interface.view_size.addEventListener('input', () => {
     flocking_interface.updateView();
     display.resizeViewport();
