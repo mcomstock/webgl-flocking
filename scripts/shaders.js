@@ -4,14 +4,18 @@ define('scripts/shaders', [
   'scripts/interface',
   'text!shaders/find_neighbors.frag',
   'text!shaders/predict_movement.frag',
-  'text!shaders/update_agents.frag',
+  'text!shaders/update_acceleration.frag',
+  'text!shaders/update_velocity.frag',
+  'text!shaders/update_agent.frag',
   'text!shaders/check_collisions.frag',
 ], function(
   Abubu,
   FlockingInterface,
   FindNeighborsShader,
   PredictMovementShader,
-  UpdateAgentsShader,
+  UpdateAccelerationShader,
+  UpdateVelocityShader,
+  UpdateAgentShader,
   CheckCollisionsShader,
 ) {
   'use strict';
@@ -63,20 +67,22 @@ define('scripts/shaders', [
     }
 
     createAgentTextures() {
-      this.agents_texture = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
-      this.agents_out_texture = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
+      this.agent_texture = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
+      this.agent_out_texture = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
 
-      this.predicted_position_texture = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true});
+      this.predicted_position_texture = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
 
       this.velocity_texture = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
       this.velocity_out_texture = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
+
+      this.acceleration_texture = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
 
       this.collision_texture = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
     }
 
     createNeighborTextures() {
-      this.neighbor_texture_0 = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
-      this.neighbor_texture_1 = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
+      this.neighbor_texture_0 = new Abubu.Uint32Texture(this.agent_width, this.agent_height, { pairable: true });
+      this.neighbor_texture_1 = new Abubu.Uint32Texture(this.agent_width, this.agent_height, { pairable: true });
     }
 
     initializeAgents() {
@@ -99,7 +105,7 @@ define('scripts/shaders', [
         velocity_array[p++] = 0.0;
       }
 
-      this.agents_texture.data = agent_array;
+      this.agent_texture.data = agent_array;
       this.velocity_texture.data = velocity_array;
       this.total_collisions = 0;
     }
@@ -112,9 +118,9 @@ define('scripts/shaders', [
             type: 'i',
             value: this.flocking_interface.number_agents.value,
           },
-          agents_texture: {
+          agent_texture: {
             type: 't',
-            value: this.agents_texture,
+            value: this.agent_texture,
           },
           neighbor_radius: {
             type: 'f',
@@ -122,11 +128,11 @@ define('scripts/shaders', [
           },
         },
         targets: {
-          neighbor_texture_1: {
+          neighbor_texture_0: {
             location: 0,
             target: this.neighbor_texture_0,
           },
-          neighbor_texture_2: {
+          neighbor_texture_1: {
             location: 1,
             target: this.neighbor_texture_1,
           },
@@ -138,9 +144,9 @@ define('scripts/shaders', [
       this.predict_movement_solver = new Abubu.Solver({
         fragmentShader: PredictMovementShader,
         uniforms: {
-          agents_texture: {
+          agent_texture: {
             type: 't',
-            value: this.agents_texture,
+            value: this.agent_texture,
           },
           velocity_texture: {
             type: 't',
@@ -160,21 +166,13 @@ define('scripts/shaders', [
       });
     }
 
-    createAgentUpdateSolver() {
-      this.agent_update_solver = new Abubu.Solver({
-        fragmentShader: UpdateAgentsShader,
+    createUpdateAccelerationSolver() {
+      this.update_acceleration_solver = new Abubu.Solver({
+        fragmentShader: UpdateAccelerationShader,
         uniforms: {
-          num_agents: {
-            type: 'i',
-            value: this.flocking_interface.number_agents.value,
-          },
-          agents_texture: {
+          predicted_position_texture: {
             type: 't',
-            value: this.agents_texture,
-          },
-          velocity_texture: {
-            type: 't',
-            value: this.velocity_texture,
+            value: this.predicted_position_texture,
           },
           neighbor_texture_0: {
             type: 't',
@@ -184,9 +182,9 @@ define('scripts/shaders', [
             type: 't',
             value: this.neighbor_texture_1,
           },
-          predicted_position_texture: {
-            type: 't',
-            value: this.predicted_position_texture,
+          num_agents: {
+            type: 'i',
+            value: this.flocking_interface.number_agents.value,
           },
           region_width: {
             type: 'f',
@@ -203,10 +201,6 @@ define('scripts/shaders', [
           dt: {
             type: 'f',
             value: this.flocking_interface.dt.value,
-          },
-          vbar: {
-            type: 'f',
-            value: this.flocking_interface.vbar.value,
           },
           abar: {
             type: 'f',
@@ -243,24 +237,96 @@ define('scripts/shaders', [
           },
         },
         targets: {
-          agents_out_texture: {
+          acceleration_texture: {
             location: 0,
-            target: this.agents_out_texture,
+            target: this.acceleration_texture,
           },
+        },
+      });
+    }
+
+    createUpdateVelocitySolver() {
+      this.update_velocity_solver = new Abubu.Solver({
+        fragmentShader: UpdateVelocityShader,
+        uniforms: {
+          velocity_texture: {
+            type: 't',
+            value: this.velocity_texture,
+          },
+          acceleration_texture: {
+            type: 't',
+            value: this.acceleration_texture,
+          },
+          dt: {
+            type: 'f',
+            value: this.flocking_interface.dt.value,
+          },
+          vbar: {
+            type: 'f',
+            value: this.flocking_interface.vbar.value,
+          },
+          num_agents: {
+            type: 'i',
+            value: this.flocking_interface.number_agents.value,
+          },
+        },
+        targets: {
           velocity_out_texture: {
-            location: 1,
+            location: 0,
             target: this.velocity_out_texture,
           },
         },
       });
     }
 
-    createAgentCopySolver() {
-      this.agent_copy = new Abubu.Copy(this.agents_out_texture, this.agents_texture);
-    }
-
     createVelocityCopySolver() {
       this.velocity_copy = new Abubu.Copy(this.velocity_out_texture, this.velocity_texture);
+    }
+
+    createUpdateAgentSolver() {
+      this.update_agent_solver = new Abubu.Solver({
+        fragmentShader: UpdateAgentShader,
+        uniforms: {
+          velocity_texture: {
+            type: 't',
+            value: this.velocity_texture,
+          },
+          agent_texture: {
+            type: 't',
+            value: this.agent_texture,
+          },
+          num_agents: {
+            type: 'i',
+            value: this.flocking_interface.number_agents.value,
+          },
+          dt: {
+            type: 'f',
+            value: this.flocking_interface.dt.value,
+          },
+          region_width: {
+            type: 'f',
+            value: this.region_width,
+          },
+          region_height: {
+            type: 'f',
+            value: this.region_height,
+          },
+          region_depth: {
+            type: 'f',
+            value: this.region_depth,
+          },
+        },
+        targets: {
+          agent_out_texture: {
+            location: 0,
+            target: this.agent_out_texture,
+          },
+        },
+      });
+    }
+
+    createAgentCopySolver() {
+      this.agent_copy = new Abubu.Copy(this.agent_out_texture, this.agent_texture);
     }
 
     createCheckCollisionsSolver() {
@@ -271,9 +337,9 @@ define('scripts/shaders', [
             type: 'i',
             value: this.flocking_interface.number_agents.value,
           },
-          agents_texture: {
+          agent_texture: {
             type: 't',
-            value: this.agents_texture,
+            value: this.agent_texture,
           },
           neighbor_texture_0: {
             type: 't',
@@ -302,16 +368,26 @@ define('scripts/shaders', [
       this.predict_movement_solver.uniforms.dt.value = this.flocking_interface.dt.value;
     }
 
-    updateAgentUpdateSolver() {
-      this.agent_update_solver.uniforms.num_agents.value = this.flocking_interface.number_agents.value;
-      this.agent_update_solver.uniforms.dt.value = this.flocking_interface.dt.value;
-      this.agent_update_solver.uniforms.vbar.value = this.flocking_interface.vbar.value;
-      this.agent_update_solver.uniforms.abar.value = this.flocking_interface.abar.value;
-      this.agent_update_solver.uniforms.eta.value = this.flocking_interface.eta.value;
-      this.agent_update_solver.uniforms.lambda.value = this.flocking_interface.lambda.value;
-      this.agent_update_solver.uniforms.omega.value = this.flocking_interface.omega.value;
-      this.agent_update_solver.uniforms.predator_constant.value = this.flocking_interface.predator_constant.value;
-      this.agent_update_solver.uniforms.neighbor_count.value = this.flocking_interface.neighbor_count.value;
+    updateUpdateAccelerationSolver() {
+      this.update_acceleration_solver.uniforms.num_agents.value = this.flocking_interface.number_agents.value;
+      this.update_acceleration_solver.uniforms.dt.value = this.flocking_interface.dt.value;
+      this.update_acceleration_solver.uniforms.abar.value = this.flocking_interface.abar.value;
+      this.update_acceleration_solver.uniforms.eta.value = this.flocking_interface.eta.value;
+      this.update_acceleration_solver.uniforms.lambda.value = this.flocking_interface.lambda.value;
+      this.update_acceleration_solver.uniforms.omega.value = this.flocking_interface.omega.value;
+      this.update_acceleration_solver.uniforms.predator_constant.value = this.flocking_interface.predator_constant.value;
+      this.update_acceleration_solver.uniforms.neighbor_count.value = this.flocking_interface.neighbor_count.value;
+    }
+
+    updateUpdateVelocitySolver() {
+      this.update_velocity_solver.uniforms.num_agents.value = this.flocking_interface.number_agents.value;
+      this.update_velocity_solver.uniforms.dt.value = this.flocking_interface.dt.value;
+      this.update_velocity_solver.uniforms.vbar.value = this.flocking_interface.vbar.value;
+    }
+
+    updateUpdateAgentSolver() {
+      this.update_agent_solver.uniforms.num_agents.value = this.flocking_interface.number_agents.value;
+      this.update_agent_solver.uniforms.dt.value = this.flocking_interface.dt.value;
     }
 
     updateCheckCollisionsSolver() {
@@ -322,14 +398,18 @@ define('scripts/shaders', [
     updateAllSolvers() {
       this.updateNeighborSolver();
       this.updatePredictMovementSolver();
-      this.updateAgentUpdateSolver();
+      this.updateUpdateAccelerationSolver();
+      this.updateUpdateVelocitySolver();
+      this.updateUpdateAgentSolver();
       this.updateCheckCollisionsSolver();
     }
 
     createAllSolvers() {
       this.createNeighborSolver();
       this.createPredictMovementSolver();
-      this.createAgentUpdateSolver();
+      this.createUpdateAccelerationSolver();
+      this.createUpdateVelocitySolver();
+      this.createUpdateAgentSolver();
       this.createAgentCopySolver();
       this.createVelocityCopySolver();
       this.createCheckCollisionsSolver();
@@ -338,9 +418,11 @@ define('scripts/shaders', [
     runOneIteration() {
       this.neighbor_solver.render();
       this.predict_movement_solver.render();
-      this.agent_update_solver.render();
-      this.agent_copy.render();
+      this.update_acceleration_solver.render();
+      this.update_velocity_solver.render();
       this.velocity_copy.render();
+      this.update_agent_solver.render();
+      this.agent_copy.render();
       this.check_collisions_solver.render();
     }
   };

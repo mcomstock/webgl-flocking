@@ -2,11 +2,12 @@
 
 precision highp float;
 precision highp int;
+precision highp usampler2D;
 
 in vec2 cc;
 
-uniform sampler2D agents_texture;
-uniform sampler2D neighbor_texture_0;
+uniform sampler2D agent_texture;
+uniform usampler2D neighbor_texture_0;
 
 uniform int num_agents;
 uniform float region_width, region_height, collision_distance;
@@ -24,11 +25,11 @@ void main() {
         return;
     }
 
-    vec4 x_tex = texture(agents_texture, cc);
-    vec4 n_tex = texture(neighbor_texture_0, cc);
+    vec4 x_tex = texture(agent_texture, cc);
+    uvec4 n_tex = texture(neighbor_texture_0, cc);
 
     // Only compare with the nearest neighbor
-    int n_ind = int(floatBitsToInt(n_tex.r) & 65535);
+    int n_ind = int(n_tex.r & 65535u);
 
     if (n_ind >= num_agents) {
         return;
@@ -37,7 +38,7 @@ void main() {
     int n_ind_x = n_ind & 63;
     int n_ind_y = n_ind >> 6;
 
-    vec4 n = texelFetch(agents_texture, ivec2(n_ind_x, n_ind_y), 0);
+    vec4 n = texelFetch(agent_texture, ivec2(n_ind_x, n_ind_y), 0);
 
     if (distance(x_tex, n) < collision_distance) {
         collision_texture = vec4(1.0, 0.0, 0.0, 0.0);

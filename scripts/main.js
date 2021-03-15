@@ -34,7 +34,7 @@ require([
 
   function run() {
     shaders.runOneIteration();
-    display.updatePositionBuffer(shaders.agents_texture.value);
+    display.updatePositionBuffer(shaders.agent_texture.value);
     display.drawScene();
 
     var collisions = shaders.collision_texture.value.reduce((a, b) => a + b, 0);
@@ -48,8 +48,8 @@ require([
     canvas: flocking_interface.display_canvas,
     event: 'drag',
     callback: (event) => {
-      shaders.agent_update_solver.uniforms.predator_active.value = 1;
-      shaders.agent_update_solver.uniforms.predator_position.value = [...event.position, 256.0];
+      shaders.update_acceleration_solver.uniforms.predator_active.value = 1;
+      shaders.update_acceleration_solver.uniforms.predator_position.value = [...event.position, 256.0];
     },
   });
 
@@ -57,7 +57,7 @@ require([
     canvas: flocking_interface.display_canvas,
     event: 'click',
     callback: (event) => {
-      shaders.agent_update_solver.uniforms.predator_active.value = 0;
+      shaders.update_acceleration_solver.uniforms.predator_active.value = 0;
     },
   });
 

@@ -2,19 +2,19 @@
 
 precision highp float;
 precision highp int;
+precision highp usampler2D;
 
 in vec2 cc;
 
-uniform sampler2D agents_texture, velocity_texture, predicted_position_texture;
-uniform sampler2D neighbor_texture_0, neighbor_texture_1;
+uniform sampler2D predicted_position_texture;
+uniform usampler2D neighbor_texture_0, neighbor_texture_1;
 
-uniform float dt, vbar, abar, eta, lambda, omega, region_width, region_height, region_depth, predator_constant;
+uniform float dt, abar, eta, lambda, omega, region_width, region_height, region_depth, predator_constant;
 uniform int num_agents, neighbor_count;
 uniform bool predator_active;
 uniform vec3 predator_position;
 
-layout (location = 0) out vec4 agents_out_texture;
-layout (location = 1) out vec4 velocity_out_texture;
+layout (location = 0) out vec4 acceleration_texture;
 
 // Hyperparameter for gradient descent
 float gamma = 0.05;
@@ -27,41 +27,35 @@ vec3 walls[6];
 float sq_wall_dist_range = 20.0 * 20.0;
 
 void main() {
-    vec4 v_tex = texture(velocity_texture, cc);
-    vec4 x_tex = texture(agents_texture, cc);
+    vec3 x = texture(predicted_position_texture, cc).xyz;
 
     int current_agent_x = int(floor(cc.x * 64.0));
     int current_agent_y = int(floor(cc.y * 64.0));
     int current_agent_idx = 64 * current_agent_y + current_agent_x;
 
     if (current_agent_idx >= num_agents) {
-        agents_out_texture = x_tex;
-        velocity_out_texture = v_tex;
         return;
     }
 
-    vec3 v = v_tex.xyz;
-    vec3 x = x_tex.xyz;
+    uvec4 n0_tex = texture(neighbor_texture_0, cc);
+    uvec4 n1_tex = texture(neighbor_texture_1, cc);
 
-    vec4 n0_tex = texture(neighbor_texture_0, cc);
-    vec4 n1_tex = texture(neighbor_texture_1, cc);
-
-    neighbors[0] = int(floatBitsToInt(n0_tex.r) & 65535);
-    neighbors[1] = int(floatBitsToInt(n0_tex.r) >> 16);
-    neighbors[2] = int(floatBitsToInt(n0_tex.g) & 65535);
-    neighbors[3] = int(floatBitsToInt(n0_tex.g) >> 16);
-    neighbors[4] = int(floatBitsToInt(n0_tex.b) & 65535);
-    neighbors[5] = int(floatBitsToInt(n0_tex.b) >> 16);
-    neighbors[6] = int(floatBitsToInt(n0_tex.a) & 65535);
-    neighbors[7] = int(floatBitsToInt(n0_tex.a) >> 16);
-    neighbors[8] = int(floatBitsToInt(n1_tex.r) & 65535);
-    neighbors[9] = int(floatBitsToInt(n1_tex.r) >> 16);
-    neighbors[10] = int(floatBitsToInt(n1_tex.g) & 65535);
-    neighbors[11] = int(floatBitsToInt(n1_tex.g) >> 16);
-    neighbors[12] = int(floatBitsToInt(n1_tex.b) & 65535);
-    neighbors[13] = int(floatBitsToInt(n1_tex.b) >> 16);
-    neighbors[14] = int(floatBitsToInt(n1_tex.a) & 65535);
-    neighbors[15] = int(floatBitsToInt(n1_tex.a) >> 16);
+    neighbors[0] = int(n0_tex.r & 65535u);
+    neighbors[1] = int(n0_tex.r >> 16);
+    neighbors[2] = int(n0_tex.g & 65535u);
+    neighbors[3] = int(n0_tex.g >> 16);
+    neighbors[4] = int(n0_tex.b & 65535u);
+    neighbors[5] = int(n0_tex.b >> 16);
+    neighbors[6] = int(n0_tex.a & 65535u);
+    neighbors[7] = int(n0_tex.a >> 16);
+    neighbors[8] = int(n1_tex.r & 65535u);
+    neighbors[9] = int(n1_tex.r >> 16);
+    neighbors[10] = int(n1_tex.g & 65535u);
+    neighbors[11] = int(n1_tex.g >> 16);
+    neighbors[12] = int(n1_tex.b & 65535u);
+    neighbors[13] = int(n1_tex.b >> 16);
+    neighbors[14] = int(n1_tex.a & 65535u);
+    neighbors[15] = int(n1_tex.a >> 16);
 
     int neighbors_to_check = min(neighbor_count, neighbors.length());
     int num_walls = walls.length();
@@ -71,7 +65,7 @@ void main() {
     // Use gradient descent to find the acceleration
     vec3 a = vec3(0.0);
     for (int i = 0; i < 1000; ++i) {
-        vec3 xi = x + dt * v + dt * dt * a;
+        vec3 xi = x + dt * dt * a;
 
         // Nearest position on each wall
         walls[0] = vec3(0.0, xi.y, xi.z);
@@ -113,7 +107,7 @@ void main() {
 
         if (N != 0) {
             vec3 regularization = a;
-            a -= (aggregation / float(N) - omega * separation + 2.0 * lambda * regularization);
+            a -= gamma * (aggregation / float(N) - omega * separation + 2.0 * lambda * regularization);
         }
 
         // Avoid the walls if too close
@@ -122,7 +116,7 @@ void main() {
             float sq_w_dist = dot(w_dist, w_dist);
 
             if (sq_w_dist < sq_wall_dist_range) {
-                a += predator_constant * 2.0 * w_dist * dt * dt / (sq_w_dist * sq_w_dist);
+                a += gamma * predator_constant * 2.0 * w_dist * dt * dt / (sq_w_dist * sq_w_dist);
             }
         }
 
@@ -130,31 +124,13 @@ void main() {
         if (predator_active) {
             vec3 xip = xi - predator;
             float sqdist = dot(xip, xip);
-            a += predator_constant * 2.0 * xip * dt * dt / (sqdist * sqdist);
+            a += gamma * predator_constant * 2.0 * xip * dt * dt / (sqdist * sqdist);
         }
-
-        a = gamma * a;
     }
 
-    // Update the velocity and position
     if (length(a) > abar) {
         a = normalize(a) * abar;
     }
 
-    v += dt * a;
-
-    if (length(v) > vbar) {
-        v = normalize(v) * vbar;
-    }
-
-    x += dt * v;
-
-    velocity_out_texture = vec4(v.x, v.y, v.z, 0.0);
-
-    agents_out_texture = vec4(
-        mod(x.x + region_width, region_width),
-        mod(x.y + region_height, region_height),
-        mod(x.z + region_depth, region_depth),
-        0.0
-    );
+    acceleration_texture = vec4(a, 0.0);
 }
