@@ -1,7 +1,7 @@
 /* global define */
 define('scripts/shaders', [
-  'libs/Abubu.js',
-  'scripts/interface',
+  'text!shaders/copy.frag',
+  'text!shaders/default.vert',
   'text!shaders/find_neighbors.frag',
   'text!shaders/predict_movement.frag',
   'text!shaders/update_acceleration.frag',
@@ -9,8 +9,8 @@ define('scripts/shaders', [
   'text!shaders/update_agent.frag',
   'text!shaders/check_collisions.frag',
 ], function(
-  Abubu,
-  FlockingInterface,
+  CopyShader,
+  DefaultVertexShader,
   FindNeighborsShader,
   PredictMovementShader,
   UpdateAccelerationShader,
@@ -31,409 +31,532 @@ define('scripts/shaders', [
       // Shader code depends on these specific values
       this.agent_width = 64;
       this.agent_height = 64;
+
+      this.predator_position = [0, 0, 0];
+      this.predator_active = 0;
+
+      this.canvas = document.createElement('canvas');
+      this.canvas.width = this.agent_width;
+      this.canvas.height = this.agent_height;
+
+      this.gl = this.canvas.getContext('webgl2');
+      this.gl.getExtension('EXT_color_buffer_float');
+      this.gl.getExtension('OES_texture_float_linear');
     }
 
-    static defaultEnv() {
-      return {
-        model: {
-          dt: 0.3,
-          vbar: 8.0,
-          abar: 1.0,
-          eta: 1.0,
-          lambda: 1.0,
-          omega: 30.0,
-          predator_constant: 10000.0,
-          neighbor_count: 7,
-        },
-        display: {
-          paused: false,
-        },
-        collisions: {
-          collision_distance: 3.0,
-        },
-        neighbor: {
-          neighbor_radius: 8.4,
-        },
-      };
+    loadShader(type, source) {
+      const gl = this.gl;
+
+      const shader = gl.createShader(type);
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        alert('An error occured compiling the shaders: ' + gl.getShaderInfoLog(shader));
+        gl.deleteShader(shader);
+        return null;
+      }
+
+      return shader;
     }
 
-    updateFromInterface() {
-      this.x_min = parseFloat(this.flocking_interface.x_min.value);
-      this.x_max = parseFloat(this.flocking_interface.x_max.value);
-      this.y_min = parseFloat(this.flocking_interface.y_min.value);
-      this.y_max = parseFloat(this.flocking_interface.y_max.value);
-      this.z_min = parseFloat(this.flocking_interface.z_min.value);
-      this.z_max = parseFloat(this.flocking_interface.z_max.value);
+    loadFloatTexture(width, height, values) {
+      const gl = this.gl;
+
+      const texture = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+
+      const level = 0;
+      const internalFormat = gl.RGBA32F;
+      const border = 0;
+      const format = gl.RGBA;
+      const type = gl.FLOAT;
+
+      gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border, format, type, values);
+
+      gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+      gl.bindTexture(gl.TEXTURE_2D, null);
+
+      return texture;
     }
 
-    createAgentTextures() {
-      this.agent_texture = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
-      this.agent_out_texture = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
+    loadUintTexture(width, height, values) {
+      const gl = this.gl;
 
-      this.predicted_position_texture = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
+      const texture = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, texture);
 
-      this.velocity_texture = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
-      this.velocity_out_texture = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
+      const level = 0;
+      const internalFormat = gl.RGBA32UI;
+      const border = 0;
+      const format = gl.RGBA_INTEGER;
+      const type = gl.UNSIGNED_INT;
 
-      this.acceleration_texture = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
+      gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border, format, type, values);
 
-      this.collision_texture = new Abubu.Float32Texture(this.agent_width, this.agent_height, { pairable: true });
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+      gl.bindTexture(gl.TEXTURE_2D, null);
+
+      return texture;
     }
 
-    createNeighborTextures() {
-      this.neighbor_texture_0 = new Abubu.Uint32Texture(this.agent_width, this.agent_height, { pairable: true });
-      this.neighbor_texture_1 = new Abubu.Uint32Texture(this.agent_width, this.agent_height, { pairable: true });
+    loadShaderProgram(vertexShaderSource, fragmentShaderSource) {
+      const gl = this.gl;
+
+      const vertexShader = this.loadShader(gl.VERTEX_SHADER, vertexShaderSource);
+      const fragmentShader = this.loadShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
+
+      const shaderProgram = gl.createProgram();
+      gl.attachShader(shaderProgram, vertexShader);
+      gl.attachShader(shaderProgram, fragmentShader);
+      gl.linkProgram(shaderProgram);
+
+      if(!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+        alert('Unable to initialize the shader program: ' + gl.getProgramInfoLog(shaderProgram));
+        return null;
+      }
+
+      return shaderProgram;
     }
 
     initializeAgents() {
-      var max_agents = this.agent_width * this.agent_height;
-      var agent_array = new Float32Array(max_agents * 4);
-      var velocity_array = new Float32Array(max_agents * 4);
+      const max_agents = this.agent_width * this.agent_height;
+      const agent_array = new Float32Array(max_agents * 4);
+      const velocity_array = new Float32Array(max_agents * 4);
 
-      var p = 0;
-      for (var i = 0; i < max_agents; ++i) {
-        agent_array[p] = this.x_min + Math.random() * (this.x_max - this.x_min);
+      let p = 0;
+      for (let i = 0; i < max_agents; ++i) {
+        agent_array[p] = Math.random() * 512;
         velocity_array[p++] = (Math.random() - 0.5) * 4.0;
 
-        agent_array[p] = this.y_min + Math.random() * (this.y_max - this.y_min);
+        agent_array[p] = Math.random() * 512;
         velocity_array[p++] = (Math.random() - 0.5) * 4.0;
 
-        agent_array[p] = this.z_min + Math.random() * (this.z_max - this.z_min);
+        agent_array[p] = Math.random() * 512;
         velocity_array[p++] = (Math.random() - 0.5) * 4.0;
 
         agent_array[p] = 0.0;
         velocity_array[p++] = 0.0;
       }
 
-      this.agent_texture.data = agent_array;
-      this.velocity_texture.data = velocity_array;
       this.total_collisions = 0;
+
+      return [ agent_array, velocity_array ];
     }
 
-    createNeighborSolver() {
-      this.neighbor_solver = new Abubu.Solver({
-        fragmentShader: FindNeighborsShader,
-        uniforms: {
-          num_agents: {
-            type: 'i',
-            value: this.flocking_interface.number_agents.value,
-          },
-          agent_texture: {
-            type: 't',
-            value: this.agent_texture,
-          },
-          neighbor_radius: {
-            type: 'f',
-            value: this.flocking_interface.neighbor_radius.value,
-          },
-        },
-        targets: {
-          neighbor_texture_0: {
-            location: 0,
-            target: this.neighbor_texture_0,
-          },
-          neighbor_texture_1: {
-            location: 1,
-            target: this.neighbor_texture_1,
-          },
-        },
-      });
+    createAgentTextures() {
+      const [ agent_array, velocity_array ] = this.initializeAgents();
+
+      this.position_texture = this.loadFloatTexture(this.agent_width, this.agent_height, agent_array);
+      this.position_out_texture = this.loadFloatTexture(this.agent_width, this.agent_height, null);
+
+      this.predicted_position_texture = this.loadFloatTexture(this.agent_width, this.agent_height, null);
+
+      this.velocity_texture = this.loadFloatTexture(this.agent_width, this.agent_height, velocity_array);
+      this.velocity_out_texture = this.loadFloatTexture(this.agent_width, this.agent_height, null);
+
+      this.acceleration_texture = this.loadFloatTexture(this.agent_width, this.agent_height, null);
+
+      this.collision_texture = this.loadFloatTexture(this.agent_width, this.agent_height, null);
     }
 
-    createPredictMovementSolver() {
-      this.predict_movement_solver = new Abubu.Solver({
-        fragmentShader: PredictMovementShader,
-        uniforms: {
-          agent_texture: {
-            type: 't',
-            value: this.agent_texture,
-          },
-          velocity_texture: {
-            type: 't',
-            value: this.velocity_texture,
-          },
-          dt: {
-            type: 'f',
-            value: this.flocking_interface.dt.value,
-          },
-        },
-        targets: {
-          predicted_position_texture: {
-            location: 0,
-            target: this.predicted_position_texture,
-          },
-        },
-      });
+    createNeighborTextures() {
+      this.neighbor_texture_0 = this.loadUintTexture(this.agent_width, this.agent_height, null);
+      this.neighbor_texture_1 = this.loadUintTexture(this.agent_width, this.agent_height, null);
     }
 
-    createUpdateAccelerationSolver() {
-      this.update_acceleration_solver = new Abubu.Solver({
-        fragmentShader: UpdateAccelerationShader,
-        uniforms: {
-          predicted_position_texture: {
-            type: 't',
-            value: this.predicted_position_texture,
-          },
-          neighbor_texture_0: {
-            type: 't',
-            value: this.neighbor_texture_0,
-          },
-          neighbor_texture_1: {
-            type: 't',
-            value: this.neighbor_texture_1,
-          },
-          num_agents: {
-            type: 'i',
-            value: this.flocking_interface.number_agents.value,
-          },
-          region_width: {
-            type: 'f',
-            value: this.region_width,
-          },
-          region_height: {
-            type: 'f',
-            value: this.region_height,
-          },
-          region_depth: {
-            type: 'f',
-            value: this.region_depth,
-          },
-          dt: {
-            type: 'f',
-            value: this.flocking_interface.dt.value,
-          },
-          abar: {
-            type: 'f',
-            value: this.flocking_interface.abar.value,
-          },
-          eta: {
-            type: 'f',
-            value: this.flocking_interface.eta.value,
-          },
-          lambda: {
-            type: 'f',
-            value: this.flocking_interface.lambda.value,
-          },
-          omega: {
-            type: 'f',
-            value: this.flocking_interface.omega.value,
-          },
-          center_pull: {
-            type: 'f',
-            value: this.flocking_interface.center.value,
-          },
-          log_attraction: {
-            type: 'f',
-            value: this.flocking_interface.log_attraction.checked ? 1.0 : 0.0,
-          },
-          predator_constant: {
-            type: 'f',
-            value: this.flocking_interface.predator_constant.value,
-          },
-          predator_active: {
-            // This is read as a bool but passed as an int
-            type: 'i',
-            value: 0,
-          },
-          predator_position: {
-            type: 'v3',
-            value: [0.0, 0.0, 0.0],
-          },
-          neighbor_count: {
-            type: 'i',
-            value: this.flocking_interface.neighbor_count.value,
-          },
-        },
-        targets: {
-          acceleration_texture: {
-            location: 0,
-            target: this.acceleration_texture,
-          },
-        },
-      });
+    attachTextures(framebuffer, textures) {
+      const gl = this.gl;
+
+      gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, framebuffer);
+
+      const draw_buffers = [];
+
+      for (let i = 0; i < textures.length; ++i) {
+        gl.framebufferTexture2D(
+          gl.DRAW_FRAMEBUFFER,
+          gl['COLOR_ATTACHMENT' + i],
+          gl.TEXTURE_2D,
+          textures[i],
+          0,
+        );
+
+        draw_buffers.push(gl['COLOR_ATTACHMENT' + i]);
+      }
+
+      gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
+
+      return draw_buffers;
     }
 
-    createUpdateVelocitySolver() {
-      this.update_velocity_solver = new Abubu.Solver({
-        fragmentShader: UpdateVelocityShader,
-        uniforms: {
-          velocity_texture: {
-            type: 't',
-            value: this.velocity_texture,
-          },
-          acceleration_texture: {
-            type: 't',
-            value: this.acceleration_texture,
-          },
-          dt: {
-            type: 'f',
-            value: this.flocking_interface.dt.value,
-          },
-          vbar: {
-            type: 'f',
-            value: this.flocking_interface.vbar.value,
-          },
-          num_agents: {
-            type: 'i',
-            value: this.flocking_interface.number_agents.value,
-          },
-        },
-        targets: {
-          velocity_out_texture: {
-            location: 0,
-            target: this.velocity_out_texture,
-          },
-        },
-      });
+    useDefaultVertexBuffer(program) {
+      const gl = this.gl;
+
+      const vertex_array = new Float32Array([
+        1, 1, 0,
+        0, 1, 0,
+        1, 0, 0,
+        0, 0, 0,
+      ]);
+
+      const vertex_buffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer);
+      gl.bufferData(gl.ARRAY_BUFFER, vertex_array, gl.STATIC_DRAW, 0);
+
+      const vertex_loc = gl.getAttribLocation(program, 'position');
+      const numComponents = 3;
+      const type = gl.FLOAT;
+      const normalize = false;
+      const stride = 0;
+      const offset = 0;
+
+      // The array buffer must be bound from earlier
+      gl.vertexAttribPointer(
+        vertex_loc,
+        numComponents,
+        type,
+        normalize,
+        stride,
+        offset,
+      );
+
+      gl.enableVertexAttribArray(vertex_loc);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+      return vertex_buffer;
     }
 
-    createVelocityCopySolver() {
-      this.velocity_copy = new Abubu.Copy(this.velocity_out_texture, this.velocity_texture);
+    getUintTextureArray(texture, array) {
+      const gl = this.gl;
+
+      const framebuffer = gl.createFramebuffer();
+
+      gl.bindFramebuffer(gl.READ_FRAMEBUFFER, framebuffer);
+      gl.framebufferTexture2D(gl.READ_FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+      gl.readBuffer(gl.COLOR_ATTACHMENT0);
+
+      gl.readPixels(0, 0, this.agent_width, this.agent_height, gl.RGBA_INTEGER, gl.UNSIGNED_INT, array);
+
+      gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
     }
 
-    createUpdateAgentSolver() {
-      this.update_agent_solver = new Abubu.Solver({
-        fragmentShader: UpdateAgentShader,
-        uniforms: {
-          velocity_texture: {
-            type: 't',
-            value: this.velocity_texture,
-          },
-          agent_texture: {
-            type: 't',
-            value: this.agent_texture,
-          },
-          num_agents: {
-            type: 'i',
-            value: this.flocking_interface.number_agents.value,
-          },
-          dt: {
-            type: 'f',
-            value: this.flocking_interface.dt.value,
-          },
-          region_width: {
-            type: 'f',
-            value: this.region_width,
-          },
-          region_height: {
-            type: 'f',
-            value: this.region_height,
-          },
-          region_depth: {
-            type: 'f',
-            value: this.region_depth,
-          },
-        },
-        targets: {
-          agent_out_texture: {
-            location: 0,
-            target: this.agent_out_texture,
-          },
-        },
-      });
+    getFloatTextureArray(texture, array) {
+      const gl = this.gl;
+
+      const framebuffer = gl.createFramebuffer();
+
+      gl.bindFramebuffer(gl.READ_FRAMEBUFFER, framebuffer);
+      gl.framebufferTexture2D(gl.READ_FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+      gl.readBuffer(gl.COLOR_ATTACHMENT0);
+
+      gl.readPixels(0, 0, this.agent_width, this.agent_height, gl.RGBA, gl.FLOAT, array);
+
+      gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
     }
 
-    createAgentCopySolver() {
-      this.agent_copy = new Abubu.Copy(this.agent_out_texture, this.agent_texture);
+    runProgram(program_info) {
+      const gl = this.gl;
+
+      const { framebuffer, program, uniform_locations, set_uniforms, out_textures } = program_info;
+      gl.useProgram(program);
+      set_uniforms(uniform_locations);
+
+      const draw_buffers = this.attachTextures(framebuffer, out_textures);
+
+      gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, framebuffer);
+      gl.drawBuffers(draw_buffers);
+
+      this.useDefaultVertexBuffer(program);
+
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+      gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
     }
 
-    createCheckCollisionsSolver() {
-      this.check_collisions_solver = new Abubu.Solver({
-        fragmentShader: CheckCollisionsShader,
-        uniforms: {
-          num_agents: {
-            type: 'i',
-            value: this.flocking_interface.number_agents.value,
-          },
-          agent_texture: {
-            type: 't',
-            value: this.agent_texture,
-          },
-          neighbor_texture_0: {
-            type: 't',
-            value: this.neighbor_texture_0,
-          },
-          collision_distance: {
-            type: 'f',
-            value: this.flocking_interface.collision_distance.value,
-          },
-        },
-        targets: {
-          collision_texture: {
-            location: 0,
-            target: this.collision_texture,
-          },
-        },
-      });
+    setupDefault(fragmentShaderSource, uniforms, out_textures, set_uniforms) {
+      const gl = this.gl;
+
+      const info = {};
+
+      info.framebuffer = gl.createFramebuffer();
+      info.program = this.loadShaderProgram(DefaultVertexShader, fragmentShaderSource);
+      gl.useProgram(info.program);
+
+      info.uniform_locations = [];
+      for (const u of uniforms) {
+        info.uniform_locations.push(gl.getUniformLocation(info.program, u));
+      }
+
+      info.out_textures = out_textures;
+      info.set_uniforms = set_uniforms;
+
+      return info;
     }
 
-    updateNeighborSolver() {
-      this.neighbor_solver.uniforms.num_agents.value = this.flocking_interface.number_agents.value;
-      this.neighbor_solver.uniforms.neighbor_radius.value = this.flocking_interface.neighbor_radius.value;
+    setupNeighbors() {
+      const gl = this.gl;
+
+      const uniforms = ['num_agents', 'neighbor_radius', 'agent_texture'];
+      const out_textures = [this.neighbor_texture_0, this.neighbor_texture_1];
+      const set_uniforms = (uniform_locations) => {
+        const gl = this.gl;
+
+        gl.uniform1i(uniform_locations[0], this.flocking_interface.number_agents.value);
+        gl.uniform1f(uniform_locations[1], this.flocking_interface.neighbor_radius.value);
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.position_texture);
+        gl.uniform1i(uniform_locations[2], 0);
+      };
+
+      return this.setupDefault(FindNeighborsShader, uniforms, out_textures, set_uniforms);
     }
 
-    updatePredictMovementSolver() {
-      this.predict_movement_solver.uniforms.dt.value = this.flocking_interface.dt.value;
+    setupPredictMovement() {
+      const gl = this.gl;
+
+      const uniforms = ['agent_texture', 'velocity_texture', 'dt'];
+      const out_textures = [this.predicted_position_texture];
+      const set_uniforms = (uniform_locations) => {
+        const gl = this.gl;
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.position_texture);
+        gl.uniform1i(uniform_locations[0], 0);
+
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, this.velocity_texture);
+        gl.uniform1i(uniform_locations[1], 1);
+
+        gl.uniform1f(uniform_locations[2], this.flocking_interface.dt.value);
+      };
+
+      return this.setupDefault(PredictMovementShader, uniforms, out_textures, set_uniforms);
     }
 
-    updateUpdateAccelerationSolver() {
-      this.update_acceleration_solver.uniforms.num_agents.value = this.flocking_interface.number_agents.value;
-      this.update_acceleration_solver.uniforms.dt.value = this.flocking_interface.dt.value;
-      this.update_acceleration_solver.uniforms.abar.value = this.flocking_interface.abar.value;
-      this.update_acceleration_solver.uniforms.eta.value = this.flocking_interface.eta.value;
-      this.update_acceleration_solver.uniforms.lambda.value = this.flocking_interface.lambda.value;
-      this.update_acceleration_solver.uniforms.omega.value = this.flocking_interface.omega.value;
-      this.update_acceleration_solver.uniforms.center_pull.value = this.flocking_interface.center.value;
-      this.update_acceleration_solver.uniforms.log_attraction.value = this.flocking_interface.log_attraction.checked ? 1.0 : 0.0;
-      this.update_acceleration_solver.uniforms.predator_constant.value = this.flocking_interface.predator_constant.value;
-      this.update_acceleration_solver.uniforms.neighbor_count.value = this.flocking_interface.neighbor_count.value;
+    setupUpdateAcceleration() {
+      const gl = this.gl;
+
+      const uniforms = [
+        'predicted_position_texture',
+        'neighbor_texture_0',
+        'neighbor_texture_1',
+        'num_agents',
+        'region_width',
+        'region_height',
+        'region_depth',
+        'dt',
+        'abar',
+        'eta',
+        'lambda',
+        'omega',
+        'center_pull',
+        'log_attraction',
+        'predator_constant',
+        'predator_active',
+        'predator_position',
+        'neighbor_count',
+      ];
+
+      const out_textures = [this.acceleration_texture];
+
+      const set_uniforms = (uniform_locations) => {
+        const gl = this.gl;
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.predicted_position_texture);
+        gl.uniform1i(uniform_locations[0], 0);
+
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, this.neighbor_texture_0);
+        gl.uniform1i(uniform_locations[1], 1);
+
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_2D, this.neighbor_texture_1);
+        gl.uniform1i(uniform_locations[2], 2);
+
+        gl.uniform1i(uniform_locations[3], this.flocking_interface.number_agents.value);
+        gl.uniform1f(uniform_locations[4], this.region_width);
+        gl.uniform1f(uniform_locations[5], this.region_height);
+        gl.uniform1f(uniform_locations[6], this.region_depth);
+        gl.uniform1f(uniform_locations[7], this.flocking_interface.dt.value);
+        gl.uniform1f(uniform_locations[8], this.flocking_interface.abar.value);
+        gl.uniform1f(uniform_locations[9], this.flocking_interface.eta.value);
+        gl.uniform1f(uniform_locations[10], this.flocking_interface.lambda.value);
+        gl.uniform1f(uniform_locations[11], this.flocking_interface.omega.value);
+        gl.uniform1f(uniform_locations[12], this.flocking_interface.center.value);
+        gl.uniform1f(uniform_locations[13], this.flocking_interface.log_attraction.checked ? 1.0 : 0.0);
+        gl.uniform1f(uniform_locations[14], this.flocking_interface.predator_constant.value);
+        gl.uniform1i(uniform_locations[15], this.predator_active);
+        gl.uniform3fv(uniform_locations[16], this.predator_position);
+        gl.uniform1i(uniform_locations[17], this.flocking_interface.neighbor_count.value);
+      };
+
+      return this.setupDefault(UpdateAccelerationShader, uniforms, out_textures, set_uniforms);
     }
 
-    updateUpdateVelocitySolver() {
-      this.update_velocity_solver.uniforms.num_agents.value = this.flocking_interface.number_agents.value;
-      this.update_velocity_solver.uniforms.dt.value = this.flocking_interface.dt.value;
-      this.update_velocity_solver.uniforms.vbar.value = this.flocking_interface.vbar.value;
+    setupUpdateVelocity() {
+      const gl = this.gl;
+
+      const uniforms = [
+        'velocity_texture',
+        'acceleration_texture',
+        'dt',
+        'vbar',
+        'num_agents',
+      ];
+
+      const out_textures = [this.velocity_out_texture];
+
+      const set_uniforms = (uniform_locations) => {
+        const gl = this.gl;
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.velocity_texture);
+        gl.uniform1i(uniform_locations[0], 0);
+
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, this.acceleration_texture);
+        gl.uniform1i(uniform_locations[1], 1);
+
+        gl.uniform1f(uniform_locations[2], this.flocking_interface.dt.value);
+        gl.uniform1f(uniform_locations[3], this.flocking_interface.vbar.value);
+        gl.uniform1i(uniform_locations[4], this.flocking_interface.number_agents.value);
+      };
+
+      return this.setupDefault(UpdateVelocityShader, uniforms, out_textures, set_uniforms);
     }
 
-    updateUpdateAgentSolver() {
-      this.update_agent_solver.uniforms.num_agents.value = this.flocking_interface.number_agents.value;
-      this.update_agent_solver.uniforms.dt.value = this.flocking_interface.dt.value;
+    setupCopyVelocity() {
+      const gl = this.gl;
+
+      const uniforms = ['original'];
+      const out_textures = [this.velocity_texture];
+
+      const set_uniforms = (uniform_locations) => {
+        const gl = this.gl;
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.velocity_out_texture);
+        gl.uniform1i(uniform_locations[0], 0);
+      };
+
+      return this.setupDefault(CopyShader, uniforms, out_textures, set_uniforms);
     }
 
-    updateCheckCollisionsSolver() {
-      this.check_collisions_solver.uniforms.num_agents.value = this.flocking_interface.number_agents.value;
-      this.check_collisions_solver.uniforms.collision_distance.value = this.flocking_interface.collision_distance.value;
+    setupUpdatePosition() {
+      const gl = this.gl;
+
+      const uniforms = [
+        'velocity_texture',
+        'agent_texture',
+        'num_agents',
+        'dt',
+        'region_width',
+        'region_height',
+        'region_depth',
+      ];
+
+      const out_textures = [this.position_out_texture];
+
+      const set_uniforms = (uniform_locations) => {
+        const gl = this.gl;
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.velocity_texture);
+        gl.uniform1i(uniform_locations[0], 0);
+
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, this.position_texture);
+        gl.uniform1i(uniform_locations[1], 1);
+
+        gl.uniform1i(uniform_locations[2], this.flocking_interface.number_agents.value);
+        gl.uniform1f(uniform_locations[3], this.flocking_interface.dt.value);
+        gl.uniform1f(uniform_locations[4], this.region_width);
+        gl.uniform1f(uniform_locations[5], this.region_height);
+        gl.uniform1f(uniform_locations[6], this.region_depth);
+      };
+
+      return this.setupDefault(UpdateAgentShader, uniforms, out_textures, set_uniforms);
     }
 
-    updateAllSolvers() {
-      this.updateNeighborSolver();
-      this.updatePredictMovementSolver();
-      this.updateUpdateAccelerationSolver();
-      this.updateUpdateVelocitySolver();
-      this.updateUpdateAgentSolver();
-      this.updateCheckCollisionsSolver();
+    setupCopyPosition() {
+      const gl = this.gl;
+
+      const uniforms = ['original'];
+      const out_textures = [this.position_texture];
+
+      const set_uniforms = (uniform_locations) => {
+        const gl = this.gl;
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.position_out_texture);
+        gl.uniform1i(uniform_locations[0], 0);
+      };
+
+      return this.setupDefault(CopyShader, uniforms, out_textures, set_uniforms);
     }
 
-    createAllSolvers() {
-      this.createNeighborSolver();
-      this.createPredictMovementSolver();
-      this.createUpdateAccelerationSolver();
-      this.createUpdateVelocitySolver();
-      this.createUpdateAgentSolver();
-      this.createAgentCopySolver();
-      this.createVelocityCopySolver();
-      this.createCheckCollisionsSolver();
+    setupCheckCollisions() {
+      const gl = this.gl;
+
+      const uniforms = [
+        'num_agents',
+        'agent_texture',
+        'neighbor_texture_0',
+        'collision_distance',
+      ];
+
+      const out_textures = [this.collision_texture];
+
+      const set_uniforms = (uniform_locations) => {
+        const gl = this.gl;
+
+        gl.uniform1i(uniform_locations[0], this.flocking_interface.number_agents.value);
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.position_texture);
+        gl.uniform1i(uniform_locations[1], 0);
+
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, this.neighbor_texture_0);
+        gl.uniform1i(uniform_locations[2], 1);
+
+        gl.uniform1f(uniform_locations[3], this.flocking_interface.collision_distance.value);
+      };
+
+      return this.setupDefault(CheckCollisionsShader, uniforms, out_textures, set_uniforms);
     }
 
-    runOneIteration() {
-      this.neighbor_solver.render();
-      this.predict_movement_solver.render();
-      this.update_acceleration_solver.render();
-      this.update_velocity_solver.render();
-      this.velocity_copy.render();
-      this.update_agent_solver.render();
-      this.agent_copy.render();
-      this.check_collisions_solver.render();
+    setupAll() {
+      this.neighbor_info = this.setupNeighbors();
+      this.predict_movement_info = this.setupPredictMovement();
+      this.update_acceleration_info = this.setupUpdateAcceleration();
+      this.update_velocity_info = this.setupUpdateVelocity();
+      this.copy_velocity_info = this.setupCopyVelocity();
+      this.update_position_info = this.setupUpdatePosition();
+      this.copy_position_info = this.setupCopyPosition();
+      this.check_collisions_info = this.setupCheckCollisions();
+    }
+
+    runAll() {
+      this.runProgram(this.neighbor_info);
+      this.runProgram(this.predict_movement_info);
+      this.runProgram(this.update_acceleration_info);
+      this.runProgram(this.update_velocity_info);
+      this.runProgram(this.copy_velocity_info);
+      this.runProgram(this.update_position_info);
+      this.runProgram(this.copy_position_info);
+      this.runProgram(this.check_collisions_info);
     }
   };
 });

@@ -8,12 +8,6 @@ define('scripts/interface', [], function() {
 
       this.collision_count_span = document.getElementById('collision_count');
 
-      this.x_min = document.getElementById('x_init_min');
-      this.x_max = document.getElementById('x_init_max');
-      this.y_min = document.getElementById('y_init_min');
-      this.y_max = document.getElementById('y_init_max');
-      this.z_min = document.getElementById('z_init_min');
-      this.z_max = document.getElementById('z_init_max');
       this.number_agents = document.getElementById('number_agents');
       this.restart_button = document.getElementById('restart_button');
 

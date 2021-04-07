@@ -12,18 +12,19 @@ require([
 ) {
   'use strict';
 
-  var total_collisions = 0;
+  let total_collisions = 0;
 
-  var flocking_interface = new FlockingInterface();
-  var shaders = new FlockingShaders(flocking_interface);
-  var display = new FlockingDisplay(flocking_interface.display_canvas);
+  const flocking_interface = new FlockingInterface();
+  const shaders = new FlockingShaders(flocking_interface);
+  const display = new FlockingDisplay(flocking_interface.display_canvas);
+
+  const collision_array = new Float32Array(shaders.agent_width * shaders.agent_height * 4);
+  const position_array = new Float32Array(shaders.agent_width * shaders.agent_height * 4);
 
   function initializeShaders() {
-    shaders.updateFromInterface();
     shaders.createAgentTextures();
     shaders.createNeighborTextures();
-    shaders.initializeAgents();
-    shaders.createAllSolvers();
+    shaders.setupAll();
   }
 
   function initializeDisplay() {
@@ -33,12 +34,13 @@ require([
   }
 
   function run() {
-    shaders.runOneIteration();
-    display.updatePositionBuffer(shaders.agent_texture.value);
+    shaders.runAll();
+    shaders.getFloatTextureArray(shaders.position_texture, position_array);
+    display.updatePositionBuffer(position_array);
     display.drawScene();
 
-    var collisions = shaders.collision_texture.value.reduce((a, b) => a + b, 0);
-    total_collisions += collisions;
+    shaders.getFloatTextureArray(shaders.collision_texture, collision_array);
+    total_collisions += collision_array.reduce((a, b) => a + b, 0);
     flocking_interface.collision_count_span.textContent = total_collisions;
 
     window.requestAnimationFrame(run);
@@ -48,8 +50,8 @@ require([
     canvas: flocking_interface.display_canvas,
     event: 'drag',
     callback: (event) => {
-      shaders.update_acceleration_solver.uniforms.predator_active.value = 1;
-      shaders.update_acceleration_solver.uniforms.predator_position.value = [...event.position, 256.0];
+      shaders.predator_active = 1;
+      shaders.predator_position = [...event.position, 256.0];
     },
   });
 
@@ -57,17 +59,14 @@ require([
     canvas: flocking_interface.display_canvas,
     event: 'click',
     callback: (event) => {
-      shaders.update_acceleration_solver.uniforms.predator_active.value = 0;
+      shaders.predator_active = 1;
     },
   });
 
   flocking_interface.restart_button.addEventListener('click', () => initializeShaders());
   flocking_interface.number_agents.addEventListener('input', () => {
-    shaders.updateAllSolvers();
     display.setAgentCount(flocking_interface.number_agents.value);
   });
-  flocking_interface.model_parameters.addEventListener('change', () => shaders.updateAllSolvers());
-  flocking_interface.toggle_parameters.addEventListener('change', () => shaders.updateAllSolvers());
   flocking_interface.view_size.addEventListener('input', () => {
     flocking_interface.updateView();
     display.resizeViewport();
