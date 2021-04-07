@@ -1,11 +1,9 @@
 /* global require */
 require([
-  'libs/Abubu.js',
   'scripts/display',
   'scripts/interface',
   'scripts/shaders',
 ], function(
-  Abubu,
   FlockingDisplay,
   FlockingInterface,
   FlockingShaders,
@@ -45,23 +43,6 @@ require([
 
     window.requestAnimationFrame(run);
   }
-
-  new Abubu.MouseListener({
-    canvas: flocking_interface.display_canvas,
-    event: 'drag',
-    callback: (event) => {
-      shaders.predator_active = 1;
-      shaders.predator_position = [...event.position, 256.0];
-    },
-  });
-
-  new Abubu.MouseListener({
-    canvas: flocking_interface.display_canvas,
-    event: 'click',
-    callback: (event) => {
-      shaders.predator_active = 1;
-    },
-  });
 
   flocking_interface.restart_button.addEventListener('click', () => initializeShaders());
   flocking_interface.number_agents.addEventListener('input', () => {
