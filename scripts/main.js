@@ -14,7 +14,6 @@ require([
 
   const flocking_interface = new FlockingInterface();
   const shaders = new FlockingShaders(flocking_interface);
-  const display = new FlockingDisplay(flocking_interface.display_canvas);
 
   const collision_array = new Float32Array(shaders.agent_width * shaders.agent_height * 4);
   const position_array = new Float32Array(shaders.agent_width * shaders.agent_height * 4);
@@ -26,16 +25,11 @@ require([
   }
 
   function initializeDisplay() {
-    display.initBirdShaderProgram();
-    display.setAgentCount(flocking_interface.number_agents.value);
-    display.resizeViewport();
   }
 
   function run() {
     shaders.runAll();
     shaders.getFloatTextureArray(shaders.position_texture, position_array);
-    display.updatePositionBuffer(position_array);
-    display.drawScene();
 
     shaders.getFloatTextureArray(shaders.collision_texture, collision_array);
     total_collisions += collision_array.reduce((a, b) => a + b, 0);
@@ -46,11 +40,9 @@ require([
 
   flocking_interface.restart_button.addEventListener('click', () => initializeShaders());
   flocking_interface.number_agents.addEventListener('input', () => {
-    display.setAgentCount(flocking_interface.number_agents.value);
   });
   flocking_interface.view_size.addEventListener('input', () => {
     flocking_interface.updateView();
-    display.resizeViewport();
   });
 
   flocking_interface.updateView();

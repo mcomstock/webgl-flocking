@@ -8,6 +8,8 @@ define('scripts/shaders', [
   'text!shaders/update_velocity.frag',
   'text!shaders/update_agent.frag',
   'text!shaders/check_collisions.frag',
+  'text!shaders/display/model.vert',
+  'text!shaders/display/model.frag',
 ], function(
   CopyShader,
   DefaultVertexShader,
@@ -17,6 +19,8 @@ define('scripts/shaders', [
   UpdateVelocityShader,
   UpdateAgentShader,
   CheckCollisionsShader,
+  ModelVertexShader,
+  ModelFragmentShader,
 ) {
   'use strict';
 
@@ -42,6 +46,8 @@ define('scripts/shaders', [
       this.gl = this.canvas.getContext('webgl2');
       this.gl.getExtension('EXT_color_buffer_float');
       this.gl.getExtension('OES_texture_float_linear');
+
+      this.context = flocking_interface.display_canvas.getContext('2d');
     }
 
     loadShader(type, source) {
@@ -197,7 +203,7 @@ define('scripts/shaders', [
       return draw_buffers;
     }
 
-    useDefaultVertexBuffer(program) {
+    initDefaultVertexBuffer() {
       const gl = this.gl;
 
       const vertex_array = new Float32Array([
@@ -210,6 +216,44 @@ define('scripts/shaders', [
       const vertex_buffer = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer);
       gl.bufferData(gl.ARRAY_BUFFER, vertex_array, gl.STATIC_DRAW, 0);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+      this.default_vertex_buffer = vertex_buffer;
+    }
+
+    initDisplayVertexBuffer() {
+      const gl = this.gl;
+
+      const vertices = [];
+      for (let i = 0; i < this.agent_width; ++i) {
+        for (let j = 0; j < this.agent_height; ++j) {
+          const x = (i+0.5) / this.agent_width;
+          const y = (j+0.5) / this.agent_height;
+
+          for (let k = 0; k < 12; ++k) {
+            vertices.push(y);
+            vertices.push(x);
+            vertices.push(k);
+          }
+        }
+      }
+
+      const vertex_array = new Float32Array(vertices);
+
+      const vertex_buffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer);
+      gl.bufferData(gl.ARRAY_BUFFER, vertex_array, gl.STATIC_DRAW, 0);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+      this.display_vertex_buffer = vertex_buffer;
+    }
+
+    useDefaultVertexBuffer(program) {
+      const gl = this.gl;
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.default_vertex_buffer);
 
       const vertex_loc = gl.getAttribLocation(program, 'position');
       const numComponents = 3;
@@ -231,8 +275,31 @@ define('scripts/shaders', [
       gl.enableVertexAttribArray(vertex_loc);
 
       gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    }
 
-      return vertex_buffer;
+    useDisplayVertexBuffer(program) {
+      const gl = this.gl;
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.display_vertex_buffer);
+
+      const vertex_loc = gl.getAttribLocation(program, 'position');
+      const numComponents = 3;
+      const type = gl.FLOAT;
+      const normalize = false;
+      const stride = 0;
+      const offset = 0;
+
+      gl.vertexAttribPointer(
+        vertex_loc,
+        numComponents,
+        type,
+        normalize,
+        stride,
+        offset,
+      );
+
+      gl.enableVertexAttribArray(vertex_loc);
+      gl.bindBuffer(gl.ARRAY_BUFFER, null);
     }
 
     getUintTextureArray(texture, array) {
@@ -282,6 +349,66 @@ define('scripts/shaders', [
       gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
     }
 
+    runDisplay(display_info) {
+      const gl = this.gl;
+
+      const old_width = this.canvas.width;
+      const old_height = this.canvas.height;
+
+      this.canvas.width = this.flocking_interface.display_canvas.width;
+      this.canvas.height = this.flocking_interface.display_canvas.height;
+
+      gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+
+      const { program, uniform_locations, set_uniforms } = display_info;
+      gl.useProgram(program);
+      set_uniforms(uniform_locations);
+
+      gl.clearColor(1.0, 1.0, 1.0, 1.0);
+      gl.clearDepth(1.0);
+      gl.enable(gl.DEPTH_TEST);
+      gl.depthFunc(gl.LEQUAL);
+
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+      this.useDisplayVertexBuffer(program);
+
+      const offset = 0;
+      const vertex_count = this.flocking_interface.number_agents.value * 12;
+      gl.drawArrays(gl.TRIANGLES, offset, vertex_count);
+
+      this.context.drawImage(gl.canvas, 0, 0, this.flocking_interface.display_canvas.width, this.flocking_interface.display_canvas.height);
+
+      this.canvas.width = old_width;
+      this.canvas.height = old_height;
+
+      gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+    }
+
+    setupDisplay() {
+      const gl = this.gl;
+
+      const info = {};
+
+      const uniforms = ['position_texture', 'velocity_texture'];
+
+      info.program = this.loadShaderProgram(ModelVertexShader, ModelFragmentShader);
+      gl.useProgram(info.program);
+
+      info.uniform_locations = uniforms.map(u => gl.getUniformLocation(info.program, u));
+      info.set_uniforms = (uniform_locations) => {
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.position_texture);
+        gl.uniform1i(info.uniform_locations[0], 0);
+
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, this.velocity_texture);
+        gl.uniform1i(info.uniform_locations[1], 1);
+      };
+
+      return info;
+    }
+
     setupDefault(fragmentShaderSource, uniforms, out_textures, set_uniforms) {
       const gl = this.gl;
 
@@ -291,10 +418,7 @@ define('scripts/shaders', [
       info.program = this.loadShaderProgram(DefaultVertexShader, fragmentShaderSource);
       gl.useProgram(info.program);
 
-      info.uniform_locations = [];
-      for (const u of uniforms) {
-        info.uniform_locations.push(gl.getUniformLocation(info.program, u));
-      }
+      info.uniform_locations = uniforms.map(u => gl.getUniformLocation(info.program, u));
 
       info.out_textures = out_textures;
       info.set_uniforms = set_uniforms;
@@ -538,6 +662,10 @@ define('scripts/shaders', [
     }
 
     setupAll() {
+      this.initDefaultVertexBuffer();
+      this.initDisplayVertexBuffer();
+
+      this.display_info = this.setupDisplay();
       this.neighbor_info = this.setupNeighbors();
       this.predict_movement_info = this.setupPredictMovement();
       this.update_acceleration_info = this.setupUpdateAcceleration();
@@ -557,6 +685,8 @@ define('scripts/shaders', [
       this.runProgram(this.update_position_info);
       this.runProgram(this.copy_position_info);
       this.runProgram(this.check_collisions_info);
+
+      this.runDisplay(this.display_info);
     }
   };
 });
