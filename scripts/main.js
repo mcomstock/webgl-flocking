@@ -1,10 +1,8 @@
 /* global require */
 require([
-  'scripts/display',
   'scripts/interface',
   'scripts/shaders',
 ], function(
-  FlockingDisplay,
   FlockingInterface,
   FlockingShaders,
 ) {
