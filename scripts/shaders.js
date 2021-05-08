@@ -349,6 +349,15 @@ define('scripts/shaders', [
       gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
     }
 
+    getViewMatrix(dist_scale) {
+      return [
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, dist_scale,
+        0, 0, 0, 1,
+      ];
+    }
+
     runDisplay(display_info) {
       const gl = this.gl;
 
@@ -360,9 +369,11 @@ define('scripts/shaders', [
 
       gl.viewport(0, 0, this.canvas.width, this.canvas.height);
 
+      const view_matrix = this.getViewMatrix(1.0);
+
       const { program, uniform_locations, set_uniforms } = display_info;
       gl.useProgram(program);
-      set_uniforms(uniform_locations);
+      set_uniforms(uniform_locations, view_matrix);
 
       gl.clearColor(1.0, 1.0, 1.0, 1.0);
       gl.clearDepth(1.0);
@@ -390,20 +401,22 @@ define('scripts/shaders', [
 
       const info = {};
 
-      const uniforms = ['position_texture', 'velocity_texture'];
+      const uniforms = ['position_texture', 'velocity_texture', 'view_matrix'];
 
       info.program = this.loadShaderProgram(ModelVertexShader, ModelFragmentShader);
       gl.useProgram(info.program);
 
       info.uniform_locations = uniforms.map(u => gl.getUniformLocation(info.program, u));
-      info.set_uniforms = (uniform_locations) => {
+      info.set_uniforms = (uniform_locations, view_matrix) => {
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, this.position_texture);
-        gl.uniform1i(info.uniform_locations[0], 0);
+        gl.uniform1i(uniform_locations[0], 0);
 
         gl.activeTexture(gl.TEXTURE1);
         gl.bindTexture(gl.TEXTURE_2D, this.velocity_texture);
-        gl.uniform1i(info.uniform_locations[1], 1);
+        gl.uniform1i(uniform_locations[1], 1);
+
+        gl.uniformMatrix4fv(uniform_locations[2], false, view_matrix);
       };
 
       return info;

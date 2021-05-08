@@ -14,6 +14,7 @@ vec3 BACK2VERT = vec3(-HALFLENGTH, -HALFBASE, ZBACKWARD);
 vec3 BACK3VERT = vec3(-HALFLENGTH, HALFBASE, ZBACKWARD);
 
 uniform sampler2D position_texture, velocity_texture;
+uniform mat4 view_matrix;
 
 in vec3 position;
 
@@ -59,7 +60,7 @@ void main() {
 
     int vertnum = int(position.z);
     vec3 pos = texture(position_texture, position.xy).xyz / region - 1.0;
-    vec3 vel = texture(velocity_texture, position.xy).xyz;
+    vec4 vel = texture(velocity_texture, position.xy);
 
     vec2 xydir = normalize(vel.xy);
     vec2 xzdir = normalize(vel.xz);
@@ -93,6 +94,6 @@ void main() {
 
     pos += rotated;
 
-    gl_Position = vec4(pos, 1.0);
+    gl_Position = view_matrix * vec4(pos, 1.0);
     color = colors[vertnum];
 }
