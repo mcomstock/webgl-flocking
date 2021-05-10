@@ -1,5 +1,6 @@
 /* global define */
 define('scripts/shaders', [
+  'libs/gl-matrix-min',
   'text!shaders/copy.frag',
   'text!shaders/default.vert',
   'text!shaders/find_neighbors.frag',
@@ -11,6 +12,7 @@ define('scripts/shaders', [
   'text!shaders/display/model.vert',
   'text!shaders/display/model.frag',
 ], function(
+  GLMatrix,
   CopyShader,
   DefaultVertexShader,
   FindNeighborsShader,
@@ -23,6 +25,8 @@ define('scripts/shaders', [
   ModelFragmentShader,
 ) {
   'use strict';
+
+  const { mat4 } = GLMatrix;
 
   return class FlockingShaders {
     constructor(flocking_interface) {
@@ -349,13 +353,29 @@ define('scripts/shaders', [
       gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
     }
 
-    getViewMatrix(dist_scale) {
-      return [
+    // Returns a matrix that transforms the region as if viewed by the eye, so that farther away
+    // objects appear smaller. The size is proportional to 1/-z, rather than linear, which is
+    // conventional.
+    getProjectionMatrix(fov, near, far) {
+      const f = Math.tan(Math.PI * 0.5 - 0.5 * fov);
+      const rangeinv = 1.0 / (near - far);
+
+      return mat4.fromValues(
+        f, 0, 0, 0,
+        0, f, 0, 0,
+        0, 0, (near + far) * rangeinv, -1,
+        0, 0, near * far * rangeinv * 2, 0,
+      );
+    }
+
+    // Returns a matrix that moves the region to the space in front of the camera.
+    getViewMatrix() {
+      return mat4.fromValues(
         1, 0, 0, 0,
         0, 1, 0, 0,
-        0, 0, 1, dist_scale,
-        0, 0, 0, 1,
-      ];
+        0, 0, -1, 0,
+        -0.5*this.region_width, -0.5*this.region_height, 0, 1,
+      );
     }
 
     runDisplay(display_info) {
@@ -369,18 +389,22 @@ define('scripts/shaders', [
 
       gl.viewport(0, 0, this.canvas.width, this.canvas.height);
 
-      const view_matrix = this.getViewMatrix(1.0);
+      // If near = 0 then the depth test doesn't work. WHY?
+      const projection_matrix = this.getProjectionMatrix(1.5*Math.PI, 1, 512);
+      const view_matrix = this.getViewMatrix();
+      const view_projection_matrix = mat4.create();
+      mat4.multiply(view_projection_matrix, projection_matrix, view_matrix);
 
       const { program, uniform_locations, set_uniforms } = display_info;
       gl.useProgram(program);
-      set_uniforms(uniform_locations, view_matrix);
+      set_uniforms(uniform_locations, view_projection_matrix);
 
       gl.clearColor(1.0, 1.0, 1.0, 1.0);
-      gl.clearDepth(1.0);
+      // gl.clearDepth(512.0);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
       gl.enable(gl.DEPTH_TEST);
       gl.depthFunc(gl.LEQUAL);
-
-      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
       this.useDisplayVertexBuffer(program);
 
@@ -401,13 +425,13 @@ define('scripts/shaders', [
 
       const info = {};
 
-      const uniforms = ['position_texture', 'velocity_texture', 'view_matrix'];
+      const uniforms = ['position_texture', 'velocity_texture', 'u_matrix'];
 
       info.program = this.loadShaderProgram(ModelVertexShader, ModelFragmentShader);
       gl.useProgram(info.program);
 
       info.uniform_locations = uniforms.map(u => gl.getUniformLocation(info.program, u));
-      info.set_uniforms = (uniform_locations, view_matrix) => {
+      info.set_uniforms = (uniform_locations, u_matrix) => {
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, this.position_texture);
         gl.uniform1i(uniform_locations[0], 0);
@@ -416,7 +440,7 @@ define('scripts/shaders', [
         gl.bindTexture(gl.TEXTURE_2D, this.velocity_texture);
         gl.uniform1i(uniform_locations[1], 1);
 
-        gl.uniformMatrix4fv(uniform_locations[2], false, view_matrix);
+        gl.uniformMatrix4fv(uniform_locations[2], false, u_matrix);
       };
 
       return info;
