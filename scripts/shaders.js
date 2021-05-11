@@ -32,9 +32,9 @@ define('scripts/shaders', [
     constructor(flocking_interface) {
       this.flocking_interface = flocking_interface;
 
-      this.region_width = 512;
-      this.region_height = 512;
-      this.region_depth = 512;
+      this.region_width = 128;
+      this.region_height = 128;
+      this.region_depth = 128;
 
       // Shader code depends on these specific values
       this.agent_width = 64;
@@ -144,13 +144,13 @@ define('scripts/shaders', [
 
       let p = 0;
       for (let i = 0; i < max_agents; ++i) {
-        agent_array[p] = Math.random() * 512;
+        agent_array[p] = Math.random() * this.region_width;
         velocity_array[p++] = (Math.random() - 0.5) * 4.0;
 
-        agent_array[p] = Math.random() * 512;
+        agent_array[p] = Math.random() * this.region_height;
         velocity_array[p++] = (Math.random() - 0.5) * 4.0;
 
-        agent_array[p] = Math.random() * 512;
+        agent_array[p] = Math.random() * this.region_depth;
         velocity_array[p++] = (Math.random() - 0.5) * 4.0;
 
         agent_array[p] = 0.0;
@@ -389,7 +389,7 @@ define('scripts/shaders', [
 
       gl.viewport(0, 0, this.canvas.width, this.canvas.height);
 
-      // If near = 0 then the depth test doesn't work. WHY?
+      // If near = 0 then the depth test doesn't work. Why?
       const projection_matrix = this.getProjectionMatrix(1.5*Math.PI, 1, 512);
       const view_matrix = this.getViewMatrix();
       const view_projection_matrix = mat4.create();
@@ -400,10 +400,11 @@ define('scripts/shaders', [
       set_uniforms(uniform_locations, view_projection_matrix);
 
       gl.clearColor(1.0, 1.0, 1.0, 1.0);
-      // gl.clearDepth(512.0);
+      gl.clearDepth(1.0);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
       gl.enable(gl.DEPTH_TEST);
+      gl.enable(gl.CULL_FACE);
       gl.depthFunc(gl.LEQUAL);
 
       this.useDisplayVertexBuffer(program);

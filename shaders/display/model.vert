@@ -3,8 +3,8 @@
 precision highp float;
 precision highp int;
 
-#define HALFLENGTH 3.0
-#define HALFBASE 3.0
+#define HALFLENGTH 0.5
+#define HALFBASE 0.3
 #define BACKTOP HALFBASE/sqrt(3.0)
 #define BACKBOT HALFBASE*(sqrt(3.0) - 1.0/sqrt(3.0))
 
@@ -27,9 +27,13 @@ uniform mat4 u_matrix;
 in vec3 position;
 
 out vec3 color;
+out vec3 normal;
 
 vec4 offset[12];
-vec3 colors[12];
+vec3 colors[4];
+vec3 normals[4];
+
+vec3 up = vec3(0.0, 1.0, 0.0);
 
 void main() {
     offset[0] = BACK1VERT;
@@ -48,29 +52,23 @@ void main() {
     offset[10] = BACK3VERT;
     offset[11] = FRONTVERT;
 
+    normals[0] = normalize(cross(normalize((offset[1] - offset[0]).xyz), (normalize(offset[2] - offset[1]).xyz)));
+    normals[1] = normalize(cross(normalize((offset[4] - offset[3]).xyz), (normalize(offset[5] - offset[4]).xyz)));
+    normals[2] = normalize(cross(normalize((offset[7] - offset[6]).xyz), (normalize(offset[8] - offset[7]).xyz)));
+    normals[3] = normalize(cross(normalize((offset[10] - offset[9]).xyz), (normalize(offset[11] - offset[10]).xyz)));
+
     colors[0] = vec3(1.0, 0.0, 0.0);
-    colors[1] = vec3(1.0, 0.0, 0.0);
-    colors[2] = vec3(1.0, 0.0, 0.0);
-
-    colors[3] = vec3(0.0, 1.0, 0.0);
-    colors[4] = vec3(0.0, 1.0, 0.0);
-    colors[5] = vec3(0.0, 1.0, 0.0);
-
-    colors[6] = vec3(0.0, 0.0, 1.0);
-    colors[7] = vec3(0.0, 0.0, 1.0);
-    colors[8] = vec3(0.0, 0.0, 1.0);
-
-    colors[9] = vec3(1.0, 1.0, 0.0);
-    colors[10] = vec3(1.0, 1.0, 0.0);
-    colors[11] = vec3(1.0, 1.0, 0.0);
+    colors[1] = vec3(0.0, 1.0, 0.0);
+    colors[2] = vec3(0.0, 0.0, 1.0);
+    colors[3] = vec3(1.0, 1.0, 0.0);
 
     int vertnum = int(position.z);
     vec4 pos = vec4(texture(position_texture, position.xy).xyz, 1.0);
     vec4 vel = texture(velocity_texture, position.xy);
 
     vec4 lookx = vec4(normalize(vel.xyz), 0.0);
-    vec4 looky = vec4(0.0, 1.0, 0.0, 0.0);
-    vec4 lookz = vec4(normalize(cross(lookx.xyz, looky.xyz)), 0.0);
+    vec4 lookz = vec4(normalize(cross(lookx.xyz, up)), 0.0);
+    vec4 looky = vec4(normalize(cross(lookz.xyz, lookx.xyz)), 0.0);
 
     // The first 3x3 block of this matrix has columns that form an orthonormal basis (under
     // non-degenerate conditions) for a Cartesian plane rotated so that the y-axis is preserved and
@@ -85,5 +83,6 @@ void main() {
     );
 
     gl_Position = u_matrix * world_matrix * offset[vertnum];
-    color = colors[vertnum];
+    color = colors[vertnum/3];
+    normal = mat3(world_matrix) * normals[vertnum/3];
 }

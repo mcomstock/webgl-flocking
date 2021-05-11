@@ -24,8 +24,8 @@ int neighbors[16];
 
 vec3 walls[6];
 
-// The range at which to start caring about the walls
-float sq_wall_dist_range = 20.0 * 20.0;
+// The (squared) range at which to start caring about the walls
+float sq_wall_dist_range = 5.0 * 5.0;
 
 void main() {
     vec3 x = texture(predicted_position_texture, cc).xyz;
