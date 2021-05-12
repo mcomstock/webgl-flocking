@@ -19,11 +19,11 @@ define('scripts/interface', [], function() {
       this.eta = document.getElementById('param_eta');
       this.lambda = document.getElementById('param_lambda');
       this.omega = document.getElementById('param_omega');
+      this.cohesion = document.getElementById('param_cohesion');
       this.predator_constant = document.getElementById('param_predator_constant');
       this.center = document.getElementById('param_center');
       this.neighbor_count = document.getElementById('param_neighbor_count');
       this.neighbor_radius = document.getElementById('param_neighbor_radius');
-      this.collision_distance = document.getElementById('param_collision_distance');
 
       this.model_parameters = document.getElementById('model_parameters');
 

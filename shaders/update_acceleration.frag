@@ -9,7 +9,7 @@ in vec2 cc;
 uniform sampler2D predicted_position_texture;
 uniform usampler2D neighbor_texture_0, neighbor_texture_1;
 
-uniform float dt, abar, eta, lambda, omega, region_width, region_height, region_depth, predator_constant;
+uniform float dt, abar, eta, lambda, omega, cohesion, region_width, region_height, region_depth, predator_constant;
 uniform float log_attraction, center_pull;
 uniform int num_agents, neighbor_count;
 uniform bool predator_active;
@@ -25,7 +25,7 @@ int neighbors[16];
 vec3 walls[6];
 
 // The (squared) range at which to start caring about the walls
-float sq_wall_dist_range = 5.0 * 5.0;
+float sq_wall_dist_range = 3.0 * 3.0;
 
 void main() {
     vec3 x = texture(predicted_position_texture, cc).xyz;
@@ -111,7 +111,7 @@ void main() {
 
         if (N != 0) {
             vec3 regularization = a;
-            a -= gamma * (aggregation / float(N) - omega * separation + 2.0 * lambda * regularization);
+            a -= gamma * (cohesion * aggregation / float(N) - omega * separation + 2.0 * lambda * regularization);
         }
 
         vec3 dc = xi - vec3(256.0, 256.0, 256.0);

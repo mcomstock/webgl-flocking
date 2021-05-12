@@ -10,7 +10,9 @@ uniform sampler2D agent_texture;
 uniform usampler2D neighbor_texture_0;
 
 uniform int num_agents;
-uniform float region_width, region_height, collision_distance;
+uniform float region_width, region_height;
+
+float collision_distance = 0.4;
 
 layout (location = 0) out vec4 collision_texture;
 

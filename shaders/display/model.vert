@@ -3,8 +3,8 @@
 precision highp float;
 precision highp int;
 
-#define HALFLENGTH 0.5
-#define HALFBASE 0.3
+#define HALFLENGTH 0.1
+#define HALFBASE 0.05
 #define BACKTOP HALFBASE/sqrt(3.0)
 #define BACKBOT HALFBASE*(sqrt(3.0) - 1.0/sqrt(3.0))
 

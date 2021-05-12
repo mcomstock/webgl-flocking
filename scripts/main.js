@@ -20,9 +20,7 @@ require([
     shaders.createAgentTextures();
     shaders.createNeighborTextures();
     shaders.setupAll();
-  }
-
-  function initializeDisplay() {
+    total_collisions = 0;
   }
 
   function run() {
@@ -45,6 +43,5 @@ require([
 
   flocking_interface.updateView();
   initializeShaders();
-  initializeDisplay();
   run();
 });

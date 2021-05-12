@@ -32,9 +32,9 @@ define('scripts/shaders', [
     constructor(flocking_interface) {
       this.flocking_interface = flocking_interface;
 
-      this.region_width = 128;
-      this.region_height = 128;
-      this.region_depth = 128;
+      this.region_width = 25;
+      this.region_height = 25;
+      this.region_depth = 25;
 
       // Shader code depends on these specific values
       this.agent_width = 64;
@@ -156,8 +156,6 @@ define('scripts/shaders', [
         agent_array[p] = 0.0;
         velocity_array[p++] = 0.0;
       }
-
-      this.total_collisions = 0;
 
       return [ agent_array, velocity_array ];
     }
@@ -390,7 +388,7 @@ define('scripts/shaders', [
       gl.viewport(0, 0, this.canvas.width, this.canvas.height);
 
       // If near = 0 then the depth test doesn't work. Why?
-      const projection_matrix = this.getProjectionMatrix(1.5*Math.PI, 1, 512);
+      const projection_matrix = this.getProjectionMatrix(1.5*Math.PI, 1, this.region_depth);
       const view_matrix = this.getViewMatrix();
       const view_projection_matrix = mat4.create();
       mat4.multiply(view_projection_matrix, projection_matrix, view_matrix);
@@ -527,6 +525,7 @@ define('scripts/shaders', [
         'predator_active',
         'predator_position',
         'neighbor_count',
+        'cohesion',
       ];
 
       const out_textures = [this.acceleration_texture];
@@ -561,6 +560,7 @@ define('scripts/shaders', [
         gl.uniform1i(uniform_locations[15], this.predator_active);
         gl.uniform3fv(uniform_locations[16], this.predator_position);
         gl.uniform1i(uniform_locations[17], this.flocking_interface.neighbor_count.value);
+        gl.uniform1f(uniform_locations[18], this.flocking_interface.cohesion.value);
       };
 
       return this.setupDefault(UpdateAccelerationShader, uniforms, out_textures, set_uniforms);
@@ -675,7 +675,6 @@ define('scripts/shaders', [
         'num_agents',
         'agent_texture',
         'neighbor_texture_0',
-        'collision_distance',
       ];
 
       const out_textures = [this.collision_texture];
@@ -692,8 +691,6 @@ define('scripts/shaders', [
         gl.activeTexture(gl.TEXTURE1);
         gl.bindTexture(gl.TEXTURE_2D, this.neighbor_texture_0);
         gl.uniform1i(uniform_locations[2], 1);
-
-        gl.uniform1f(uniform_locations[3], this.flocking_interface.collision_distance.value);
       };
 
       return this.setupDefault(CheckCollisionsShader, uniforms, out_textures, set_uniforms);
