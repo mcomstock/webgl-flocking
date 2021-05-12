@@ -144,18 +144,31 @@ define('scripts/shaders', [
 
       let p = 0;
       for (let i = 0; i < max_agents; ++i) {
-        agent_array[p] = Math.random() * this.region_width;
-        velocity_array[p++] = (Math.random() - 0.5) * 4.0;
+        agent_array[p] = 0.0;
+        velocity_array[p++] = this.flocking_interface.vbar.value;
 
-        agent_array[p] = Math.random() * this.region_height;
-        velocity_array[p++] = (Math.random() - 0.5) * 4.0;
+        agent_array[p] = 0.5 * this.region_width;
+        velocity_array[p++] = 0.0;
 
-        agent_array[p] = Math.random() * this.region_depth;
-        velocity_array[p++] = (Math.random() - 0.5) * 4.0;
+        agent_array[p] = 0.5 * this.region_depth;
+        velocity_array[p++] = 0.0;
 
         agent_array[p] = 0.0;
         velocity_array[p++] = 0.0;
       }
+      // for (let i = 0; i < max_agents; ++i) {
+      //   agent_array[p] = Math.random() * this.region_width;
+      //   velocity_array[p++] = (Math.random() - 0.5) * 4.0;
+
+      //   agent_array[p] = Math.random() * this.region_height;
+      //   velocity_array[p++] = (Math.random() - 0.5) * 4.0;
+
+      //   agent_array[p] = Math.random() * this.region_depth;
+      //   velocity_array[p++] = (Math.random() - 0.5) * 4.0;
+
+      //   agent_array[p] = 0.0;
+      //   velocity_array[p++] = 0.0;
+      // }
 
       this.total_collisions = 0;
 
@@ -717,9 +730,9 @@ define('scripts/shaders', [
     runAll() {
       this.runProgram(this.neighbor_info);
       this.runProgram(this.predict_movement_info);
-      this.runProgram(this.update_acceleration_info);
-      this.runProgram(this.update_velocity_info);
-      this.runProgram(this.copy_velocity_info);
+      // this.runProgram(this.update_acceleration_info);
+      // this.runProgram(this.update_velocity_info);
+      // this.runProgram(this.copy_velocity_info);
       this.runProgram(this.update_position_info);
       this.runProgram(this.copy_position_info);
       this.runProgram(this.check_collisions_info);
