@@ -27,9 +27,14 @@
       <input id="param_dt" type="range" min="0.01" max="0.05" step="0.01" value="0.05">
       <span class="max">0.05</span>
 
-      <label for="param_vbar">Max velocity</label>
+      <label for="param_vmin">Min velocity</label>
       <span class="min">1</span>
-      <input id="param_vbar" type="range" min="1" max="20" step="0.1" value="17">
+      <input id="param_vmin" type="range" min="1" max="10" step="0.1" value="10">
+      <span class="max">10</span>
+
+      <label for="param_vbar">Max velocity</label>
+      <span class="min">10</span>
+      <input id="param_vbar" type="range" min="10" max="20" step="0.1" value="17">
       <span class="max">20</span>
 
       <label for="param_abar">Max acceleration</label>
@@ -57,6 +62,41 @@
       <input id="param_cohesion" type="range" min="0" max="10" step="0.1" value="1">
       <span class="max">10</span>
 
+      <label for="param_alignment">Alignment</label>
+      <span class="min">0</span>
+      <input id="param_alignment" type="range" min="0" max="10" step="0.1" value="1">
+      <span class="max">10</span>
+
+      <label for="param_epsilon_par">Parallel epsilon</label>
+      <span class="min">1</span>
+      <input id="param_epsilon_par" type="range" min="1" max="5" step="0.1" value="2">
+      <span class="max">5</span>
+
+      <label for="param_sigma_par">Parallel sigma</label>
+      <span class="min">1</span>
+      <input id="param_sigma_par" type="range" min="1" max="10" step="0.1" value="6">
+      <span class="max">10</span>
+
+      <label for="param_alpha_par">Parallel alpha</label>
+      <span class="min">1</span>
+      <input id="param_alpha_par" type="range" min="1" max="6" step="1" value="3">
+      <span class="max">6</span>
+
+      <label for="param_epsilon_perp">Perpendicular epsilon</label>
+      <span class="min">1</span>
+      <input id="param_epsilon_perp" type="range" min="1" max="5" step="0.1" value="2">
+      <span class="max">5</span>
+
+      <label for="param_sigma_perp">Perpendicular sigma</label>
+      <span class="min">1</span>
+      <input id="param_sigma_perp" type="range" min="1" max="10" step="0.1" value="2">
+      <span class="max">10</span>
+
+      <label for="param_alpha_perp">Perpendicular alpha</label>
+      <span class="min">1</span>
+      <input id="param_alpha_perp" type="range" min="1" max="6" step="1" value="5">
+      <span class="max">6</span>
+
       <label for="param_predator_constant">Predator cost factor</label>
       <span class="min">0</span>
       <input id="param_predator_constant" type="range" min="0" max="10" step="0.1" value="1">
@@ -74,13 +114,24 @@
 
       <label for="param_neighbor_radius">Max neighbor radius</label>
       <span class="min">0</span>
-      <input id="param_neighbor_radius" type="range" min="0" max="1000" step="0.1" value="8.4">
-      <span class="max">1000</span>
+      <input id="param_neighbor_radius" type="range" min="0" max="100" step="0.1" value="8.4">
+      <span class="max">100</span>
     </div>
     <br>
     <div id="toggle_parameters">
       <label for="toggle_log_attraction">Logarithmic attraction</label>
-      <input id="log_attraction" type="checkbox"</label>
+      <input id="log_attraction" type="checkbox">
+    </div>
+    <br>
+    <div id="interaction_type">
+      <input type="radio" id="int_mpc" name="int_type" value="mpc" checked>
+      <label for="int_mpc">MPC</label>
+      <br>
+      <input type="radio" id="int_sym" name="int_type" value="sym">
+      <label for="int_sym">Symmetric potential function</label>
+      <br>
+      <input type="radio" id="int_flav" name="int_type" value="flav">
+      <label for="int_flav">Flavio's potential function</label>
     </div>
     <br>
     <input id="restart_button" type="button" value="restart">

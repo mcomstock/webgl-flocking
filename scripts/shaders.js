@@ -6,6 +6,8 @@ define('scripts/shaders', [
   'text!shaders/find_neighbors.frag',
   'text!shaders/predict_movement.frag',
   'text!shaders/update_acceleration.frag',
+  'text!shaders/update_acceleration_2.frag',
+  'text!shaders/update_acceleration_3.frag',
   'text!shaders/update_velocity.frag',
   'text!shaders/update_agent.frag',
   'text!shaders/check_collisions.frag',
@@ -18,6 +20,8 @@ define('scripts/shaders', [
   FindNeighborsShader,
   PredictMovementShader,
   UpdateAccelerationShader,
+  UpdateAccelerationShader2,
+  UpdateAccelerationShader3,
   UpdateVelocityShader,
   UpdateAgentShader,
   CheckCollisionsShader,
@@ -32,9 +36,12 @@ define('scripts/shaders', [
     constructor(flocking_interface) {
       this.flocking_interface = flocking_interface;
 
-      this.region_width = 25;
-      this.region_height = 25;
-      this.region_depth = 25;
+      this.region_width = 75;
+      this.region_height = 75;
+      this.region_depth = 75;
+      // this.region_width = 25;
+      // this.region_height = 25;
+      // this.region_depth = 25;
 
       // Shader code depends on these specific values
       this.agent_width = 64;
@@ -566,6 +573,161 @@ define('scripts/shaders', [
       return this.setupDefault(UpdateAccelerationShader, uniforms, out_textures, set_uniforms);
     }
 
+    setupUpdateAcceleration2() {
+      const gl = this.gl;
+
+      const uniforms = [
+        'position_texture',
+        'neighbor_texture_0',
+        'neighbor_texture_1',
+        'num_agents',
+        'region_width',
+        'region_height',
+        'region_depth',
+        'dt',
+        'abar',
+        'eta',
+        'lambda',
+        'omega',
+        'center_pull',
+        'log_attraction',
+        'predator_constant',
+        'predator_active',
+        'predator_position',
+        'neighbor_count',
+        'cohesion',
+        'velocity_texture',
+        'alignment',
+      ];
+
+      const out_textures = [this.acceleration_texture];
+
+      const set_uniforms = (uniform_locations) => {
+        const gl = this.gl;
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.position_texture);
+        gl.uniform1i(uniform_locations[0], 0);
+
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, this.neighbor_texture_0);
+        gl.uniform1i(uniform_locations[1], 1);
+
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_2D, this.neighbor_texture_1);
+        gl.uniform1i(uniform_locations[2], 2);
+
+        gl.uniform1i(uniform_locations[3], this.flocking_interface.number_agents.value);
+        gl.uniform1f(uniform_locations[4], this.region_width);
+        gl.uniform1f(uniform_locations[5], this.region_height);
+        gl.uniform1f(uniform_locations[6], this.region_depth);
+        gl.uniform1f(uniform_locations[7], this.flocking_interface.dt.value);
+        gl.uniform1f(uniform_locations[8], this.flocking_interface.abar.value);
+        gl.uniform1f(uniform_locations[9], this.flocking_interface.eta.value);
+        gl.uniform1f(uniform_locations[10], this.flocking_interface.lambda.value);
+        gl.uniform1f(uniform_locations[11], this.flocking_interface.omega.value);
+        gl.uniform1f(uniform_locations[12], this.flocking_interface.center.value);
+        gl.uniform1f(uniform_locations[13], this.flocking_interface.log_attraction.checked ? 1.0 : 0.0);
+        gl.uniform1f(uniform_locations[14], this.flocking_interface.predator_constant.value);
+        gl.uniform1i(uniform_locations[15], this.predator_active);
+        gl.uniform3fv(uniform_locations[16], this.predator_position);
+        gl.uniform1i(uniform_locations[17], this.flocking_interface.neighbor_count.value);
+        gl.uniform1f(uniform_locations[18], this.flocking_interface.cohesion.value);
+
+        gl.activeTexture(gl.TEXTURE3);
+        gl.bindTexture(gl.TEXTURE_2D, this.velocity_texture);
+        gl.uniform1i(uniform_locations[19], 3);
+
+        gl.uniform1f(uniform_locations[20], this.flocking_interface.alignment.value);
+      };
+
+      return this.setupDefault(UpdateAccelerationShader2, uniforms, out_textures, set_uniforms);
+    }
+
+    setupUpdateAcceleration3() {
+      const gl = this.gl;
+
+      const uniforms = [
+        'position_texture',
+        'neighbor_texture_0',
+        'neighbor_texture_1',
+        'num_agents',
+        'region_width',
+        'region_height',
+        'region_depth',
+        'dt',
+        'abar',
+        'eta',
+        'lambda',
+        'omega',
+        'center_pull',
+        'log_attraction',
+        'predator_constant',
+        'predator_active',
+        'predator_position',
+        'neighbor_count',
+        'cohesion',
+        'velocity_texture',
+        'alignment',
+        'epsilon_par',
+        'sigma_par',
+        'alpha_par',
+        'epsilon_perp',
+        'sigma_perp',
+        'alpha_perp',
+      ];
+
+      const out_textures = [this.acceleration_texture];
+
+      const set_uniforms = (uniform_locations) => {
+        const gl = this.gl;
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.position_texture);
+        gl.uniform1i(uniform_locations[0], 0);
+
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, this.neighbor_texture_0);
+        gl.uniform1i(uniform_locations[1], 1);
+
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_2D, this.neighbor_texture_1);
+        gl.uniform1i(uniform_locations[2], 2);
+
+        gl.uniform1i(uniform_locations[3], this.flocking_interface.number_agents.value);
+        gl.uniform1f(uniform_locations[4], this.region_width);
+        gl.uniform1f(uniform_locations[5], this.region_height);
+        gl.uniform1f(uniform_locations[6], this.region_depth);
+        gl.uniform1f(uniform_locations[7], this.flocking_interface.dt.value);
+        gl.uniform1f(uniform_locations[8], this.flocking_interface.abar.value);
+        gl.uniform1f(uniform_locations[9], this.flocking_interface.eta.value);
+        gl.uniform1f(uniform_locations[10], this.flocking_interface.lambda.value);
+        gl.uniform1f(uniform_locations[11], this.flocking_interface.omega.value);
+        gl.uniform1f(uniform_locations[12], this.flocking_interface.center.value);
+        gl.uniform1f(uniform_locations[13], this.flocking_interface.log_attraction.checked ? 1.0 : 0.0);
+        gl.uniform1f(uniform_locations[14], this.flocking_interface.predator_constant.value);
+        gl.uniform1i(uniform_locations[15], this.predator_active);
+        gl.uniform3fv(uniform_locations[16], this.predator_position);
+        gl.uniform1i(uniform_locations[17], this.flocking_interface.neighbor_count.value);
+        gl.uniform1f(uniform_locations[18], this.flocking_interface.cohesion.value);
+
+        gl.activeTexture(gl.TEXTURE3);
+        gl.bindTexture(gl.TEXTURE_2D, this.velocity_texture);
+        gl.uniform1i(uniform_locations[19], 3);
+
+        gl.uniform1f(uniform_locations[20], this.flocking_interface.alignment.value);
+
+        gl.uniform1f(uniform_locations[21], this.flocking_interface.epsilon_par.value);
+        gl.uniform1f(uniform_locations[22], this.flocking_interface.sigma_par.value);
+        gl.uniform1f(uniform_locations[23], this.flocking_interface.alpha_par.value);
+        gl.uniform1f(uniform_locations[24], this.flocking_interface.epsilon_perp.value);
+        gl.uniform1f(uniform_locations[25], this.flocking_interface.sigma_perp.value);
+        gl.uniform1f(uniform_locations[26], this.flocking_interface.alpha_perp.value);
+      };
+
+      return this.setupDefault(UpdateAccelerationShader3, uniforms, out_textures, set_uniforms);
+    }
+
     setupUpdateVelocity() {
       const gl = this.gl;
 
@@ -575,6 +737,7 @@ define('scripts/shaders', [
         'dt',
         'vbar',
         'num_agents',
+        'vmin',
       ];
 
       const out_textures = [this.velocity_out_texture];
@@ -593,6 +756,7 @@ define('scripts/shaders', [
         gl.uniform1f(uniform_locations[2], this.flocking_interface.dt.value);
         gl.uniform1f(uniform_locations[3], this.flocking_interface.vbar.value);
         gl.uniform1i(uniform_locations[4], this.flocking_interface.number_agents.value);
+        gl.uniform1f(uniform_locations[5], this.flocking_interface.vmin.value);
       };
 
       return this.setupDefault(UpdateVelocityShader, uniforms, out_textures, set_uniforms);
@@ -704,6 +868,8 @@ define('scripts/shaders', [
       this.neighbor_info = this.setupNeighbors();
       this.predict_movement_info = this.setupPredictMovement();
       this.update_acceleration_info = this.setupUpdateAcceleration();
+      this.update_acceleration_2_info = this.setupUpdateAcceleration2();
+      this.update_acceleration_3_info = this.setupUpdateAcceleration3();
       this.update_velocity_info = this.setupUpdateVelocity();
       this.copy_velocity_info = this.setupCopyVelocity();
       this.update_position_info = this.setupUpdatePosition();
@@ -712,9 +878,18 @@ define('scripts/shaders', [
     }
 
     runAll() {
+      // const arr = new Float32Array(this.agent_width*this.agent_height*4);
       this.runProgram(this.neighbor_info);
       this.runProgram(this.predict_movement_info);
-      this.runProgram(this.update_acceleration_info);
+      if (this.flocking_interface.int_mpc.checked) {
+        this.runProgram(this.update_acceleration_info);
+      } else if (this.flocking_interface.int_sym.checked) {
+        this.runProgram(this.update_acceleration_2_info);
+      } else {
+        this.runProgram(this.update_acceleration_3_info);
+      }
+      // this.getFloatTextureArray(this.velocity_texture, arr);
+      // console.log(arr);
       this.runProgram(this.update_velocity_info);
       this.runProgram(this.copy_velocity_info);
       this.runProgram(this.update_position_info);

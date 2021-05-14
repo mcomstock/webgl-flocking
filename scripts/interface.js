@@ -14,12 +14,14 @@ define('scripts/interface', [], function() {
       this.view_size = document.getElementById('view_size');
 
       this.dt = document.getElementById('param_dt');
+      this.vmin = document.getElementById('param_vmin');
       this.vbar = document.getElementById('param_vbar');
       this.abar = document.getElementById('param_abar');
       this.eta = document.getElementById('param_eta');
       this.lambda = document.getElementById('param_lambda');
       this.omega = document.getElementById('param_omega');
       this.cohesion = document.getElementById('param_cohesion');
+      this.alignment = document.getElementById('param_alignment');
       this.predator_constant = document.getElementById('param_predator_constant');
       this.center = document.getElementById('param_center');
       this.neighbor_count = document.getElementById('param_neighbor_count');
@@ -29,6 +31,17 @@ define('scripts/interface', [], function() {
 
       this.log_attraction = document.getElementById('log_attraction');
       this.toggle_parameters = document.getElementById('toggle_parameters');
+
+      this.epsilon_par = document.getElementById('param_epsilon_par');
+      this.sigma_par = document.getElementById('param_sigma_par');
+      this.alpha_par = document.getElementById('param_alpha_par');
+      this.epsilon_perp = document.getElementById('param_epsilon_perp');
+      this.sigma_perp = document.getElementById('param_sigma_perp');
+      this.alpha_perp = document.getElementById('param_alpha_perp');
+
+      this.int_mpc = document.getElementById('int_mpc');
+      this.int_sym = document.getElementById('int_sym');
+      this.int_flav = document.getElementById('int_flav');
     }
 
     static getWidth(element) {

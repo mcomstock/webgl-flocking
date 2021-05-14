@@ -7,7 +7,7 @@ in vec2 cc;
 
 uniform sampler2D velocity_texture, acceleration_texture;
 
-uniform float dt, vbar;
+uniform float dt, vbar, vmin;
 uniform int num_agents;
 
 layout (location = 0) out vec4 velocity_out_texture;
@@ -29,6 +29,8 @@ void main() {
 
     if (length(v) > vbar) {
         v = normalize(v) * vbar;
+    } else if (length(v) != 0.0 && length(v) < vmin) {
+        v = normalize(v) * vmin;
     }
 
     velocity_out_texture = v;
