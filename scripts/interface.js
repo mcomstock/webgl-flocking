@@ -30,6 +30,7 @@ define('scripts/interface', [], function() {
       this.model_parameters = document.getElementById('model_parameters');
 
       this.log_attraction = document.getElementById('log_attraction');
+      this.pause = document.getElementById('toggle_pause');
       this.toggle_parameters = document.getElementById('toggle_parameters');
 
       this.epsilon_par = document.getElementById('param_epsilon_par');

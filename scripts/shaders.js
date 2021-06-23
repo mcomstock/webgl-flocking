@@ -162,6 +162,78 @@ define('scripts/shaders', [
 
         agent_array[p] = 0.0;
         velocity_array[p++] = 0.0;
+
+        // agent_array[p] = Math.random() * this.region_width;
+        // velocity_array[p++] = Math.random() * 4.0;
+
+        // agent_array[p] = Math.random() * this.region_height;
+        // velocity_array[p++] = Math.random() * 4.0;
+
+        // agent_array[p] = Math.random() * this.region_depth;
+        // velocity_array[p++] = Math.random() * 4.0;
+
+        // agent_array[p] = 0.0;
+        // velocity_array[p++] = 0.0;
+
+        // agent_array[p] = Math.random() * this.region_width;
+        // velocity_array[p++] = (Math.random() - 0.5) * 4.0;
+
+        // agent_array[p] = Math.random() * this.region_height;
+        // velocity_array[p++] = (Math.random() - 0.5) * 4.0;
+
+        // agent_array[p] = 0.5 * this.region_depth;
+        // velocity_array[p++] = 0.0;
+
+        // agent_array[p] = 0.0;
+        // velocity_array[p++] = 0.0;
+
+        // agent_array[p] = 0.25*this.region_width + Math.random() * 0.5*this.region_width;
+        // velocity_array[p++] = 3.0 + 0.2*Math.random();
+
+        // agent_array[p] = 0.25*this.region_width + Math.random() * 0.5*this.region_height;
+        // velocity_array[p++] = 3.0 + 0.2*Math.random();
+
+        // agent_array[p] = 0.5 * this.region_depth;
+        // velocity_array[p++] = 0.0;
+
+        // agent_array[p] = 0.0;
+        // velocity_array[p++] = 0.0;
+
+        // agent_array[p] = Math.random() * this.region_width;
+        // velocity_array[p++] = 1.0 + 0.2*Math.random() / 4;
+
+        // agent_array[p] = Math.random() * this.region_height / 4;
+        // velocity_array[p++] = 1.0 + 0.2*Math.random();
+
+        // agent_array[p] = Math.random() * this.region_depth / 4;
+        // velocity_array[p++] = 1.0 + 0.2*Math.random();
+
+        // agent_array[p] = 0.0;
+        // velocity_array[p++] = 0.0;
+
+        // agent_array[p] = i;
+        // velocity_array[p++] = 1.0;
+
+        // agent_array[p] = 0.5 * this.region_height;
+        // velocity_array[p++] = 0;
+
+        // agent_array[p] = 0.5 * this.region_depth;
+        // velocity_array[p++] = 0;
+
+        // agent_array[p] = 0;
+        // velocity_array[p++] = 0;
+
+        // agent_array[p] = (i % 3);
+        // velocity_array[p++] = 1.0;
+
+        // agent_array[p] = 1 + Math.floor(i / 3);
+        // velocity_array[p++] = 0;
+
+        // agent_array[p] = 0.5 * this.region_depth;
+        // velocity_array[p++] = 0;
+
+        // agent_array[p] = 0;
+        // velocity_array[p++] = 0;
       }
 
       return [ agent_array, velocity_array ];
@@ -533,6 +605,8 @@ define('scripts/shaders', [
         'predator_position',
         'neighbor_count',
         'cohesion',
+        'velocity_texture',
+        'alignment',
       ];
 
       const out_textures = [this.acceleration_texture];
@@ -541,7 +615,7 @@ define('scripts/shaders', [
         const gl = this.gl;
 
         gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, this.predicted_position_texture);
+        gl.bindTexture(gl.TEXTURE_2D, this.position_texture);
         gl.uniform1i(uniform_locations[0], 0);
 
         gl.activeTexture(gl.TEXTURE1);
@@ -568,6 +642,12 @@ define('scripts/shaders', [
         gl.uniform3fv(uniform_locations[16], this.predator_position);
         gl.uniform1i(uniform_locations[17], this.flocking_interface.neighbor_count.value);
         gl.uniform1f(uniform_locations[18], this.flocking_interface.cohesion.value);
+
+        gl.activeTexture(gl.TEXTURE3);
+        gl.bindTexture(gl.TEXTURE_2D, this.velocity_texture);
+        gl.uniform1i(uniform_locations[19], 3);
+
+        gl.uniform1f(uniform_locations[20], this.flocking_interface.alignment.value);
       };
 
       return this.setupDefault(UpdateAccelerationShader, uniforms, out_textures, set_uniforms);
@@ -888,7 +968,9 @@ define('scripts/shaders', [
       } else {
         this.runProgram(this.update_acceleration_3_info);
       }
-      // this.getFloatTextureArray(this.velocity_texture, arr);
+      // this.getFloatTextureArray(this.position_texture, arr);
+      // console.log(Array.from(arr).filter(x => (x !== x)).length);
+      // console.log(Array.from(arr).filter((_,i) => (i%4) !== 0).filter(x => (x !== x)).length);
       // console.log(arr);
       this.runProgram(this.update_velocity_info);
       this.runProgram(this.copy_velocity_info);

@@ -28,8 +28,8 @@
       <span class="max">0.05</span>
 
       <label for="param_vmin">Min velocity</label>
-      <span class="min">1</span>
-      <input id="param_vmin" type="range" min="1" max="10" step="0.1" value="10">
+      <span class="min">0</span>
+      <input id="param_vmin" type="range" min="0" max="10" step="0.1" value="2">
       <span class="max">10</span>
 
       <label for="param_vbar">Max velocity</label>
@@ -119,8 +119,11 @@
     </div>
     <br>
     <div id="toggle_parameters">
-      <label for="toggle_log_attraction">Logarithmic attraction</label>
+      <label for="log_attraction">Logarithmic attraction</label>
       <input id="log_attraction" type="checkbox">
+      <br>
+      <label for="toggle_pause">Pause</label>
+      <input id="toggle_pause" type="checkbox">
     </div>
     <br>
     <div id="interaction_type">

@@ -24,12 +24,14 @@ require([
   }
 
   function run() {
-    shaders.runAll();
-    shaders.getFloatTextureArray(shaders.position_texture, position_array);
+    if (!flocking_interface.pause.checked) {
+      shaders.runAll();
+      shaders.getFloatTextureArray(shaders.position_texture, position_array);
 
-    shaders.getFloatTextureArray(shaders.collision_texture, collision_array);
-    total_collisions += collision_array.reduce((a, b) => a + b, 0);
-    flocking_interface.collision_count_span.textContent = total_collisions;
+      shaders.getFloatTextureArray(shaders.collision_texture, collision_array);
+      total_collisions += collision_array.reduce((a, b) => a + b, 0);
+      flocking_interface.collision_count_span.textContent = total_collisions;
+    }
 
     window.requestAnimationFrame(run);
   }
