@@ -41,6 +41,9 @@ define('scripts/interface', [], function() {
       this.int_mpc = document.getElementById('int_mpc');
       this.int_sym = document.getElementById('int_sym');
       this.int_flav = document.getElementById('int_flav');
+
+      this.param_popup_button = document.getElementById('param_popup_button');
+      this.param_popup_content = document.getElementById('param_popup_content');
     }
 
     static getWidth(element) {
@@ -55,6 +58,10 @@ define('scripts/interface', [], function() {
       const display_canvas_div = document.getElementById('display_canvas_div');
       this.display_canvas.setAttribute('width', parseInt(display_canvas_div.clientWidth));
       this.display_canvas.setAttribute('height', parseInt(display_canvas_div.clientHeight));
+    }
+
+    togglePopup() {
+      this.param_popup_content.classList.toggle('show');
     }
   };
 });

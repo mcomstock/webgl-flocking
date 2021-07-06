@@ -1,7 +1,8 @@
 body {
-  background-color: #fdf6e3;
-  color: #657b83;
   font-family: "sans-serif";
+  height: 100vh;
+  margin: 0;
+  display: flex;
 }
 
 .param_div {
@@ -10,11 +11,33 @@ body {
   grid-column-gap: 0.5em;
 }
 
-#display_canvas_div {
-  width: 100%;
-  height: 100vh;
+.popup {
+  margin: 0.2em;
+  position: absolute;
+  display: inline-block;
+  opacity: 0.7;
 }
 
-#display_canvas {
-  border: 1px solid #657b83;
+.popup .popup-content {
+  background-color: #fdf6e3;
+  color: #657b83;
+  visibility: hidden;
+  z-index: 1;
+  position: absolute;
+  border: 1px solid;
+  padding: 0.5em;
+}
+
+.popup .popup-content div {
+  margin-bottom: 1em;
+}
+
+.popup .show {
+  visibility: visible;
+}
+
+#display_canvas_div {
+  height: 100%;
+  width: 100%;
+  display: flex;
 }
