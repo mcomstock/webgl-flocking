@@ -36,12 +36,8 @@ require([
     window.requestAnimationFrame(run);
   }
 
-  flocking_interface.restart_button.addEventListener('click', () => initializeShaders());
-  flocking_interface.number_agents.addEventListener('input', () => {
-  });
-  flocking_interface.view_size.addEventListener('input', () => {
-    flocking_interface.updateView();
-  });
+  flocking_interface.restart_button.addEventListener('click', initializeShaders);
+  window.onresize = () => flocking_interface.updateView();
 
   flocking_interface.updateView();
   initializeShaders();

@@ -1,4 +1,6 @@
 body {
+  background-color: #fdf6e3;
+  color: #657b83;
   font-family: "sans-serif";
 }
 
@@ -6,4 +8,13 @@ body {
   display: grid;
   grid-template-columns: max-content max-content max-content max-content;
   grid-column-gap: 0.5em;
+}
+
+#display_canvas_div {
+  width: 100%;
+  height: 100vh;
+}
+
+#display_canvas {
+  border: 1px solid #657b83;
 }

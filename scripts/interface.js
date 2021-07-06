@@ -11,8 +11,6 @@ define('scripts/interface', [], function() {
       this.number_agents = document.getElementById('number_agents');
       this.restart_button = document.getElementById('restart_button');
 
-      this.view_size = document.getElementById('view_size');
-
       this.dt = document.getElementById('param_dt');
       this.vmin = document.getElementById('param_vmin');
       this.vbar = document.getElementById('param_vbar');
@@ -54,8 +52,9 @@ define('scripts/interface', [], function() {
     }
 
     updateView() {
-      this.display_canvas.setAttribute('width', parseInt(this.view_size.value));
-      this.display_canvas.setAttribute('height', parseInt(this.view_size.value));
+      const display_canvas_div = document.getElementById('display_canvas_div');
+      this.display_canvas.setAttribute('width', parseInt(display_canvas_div.clientWidth));
+      this.display_canvas.setAttribute('height', parseInt(display_canvas_div.clientHeight));
     }
   };
 });
