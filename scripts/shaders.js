@@ -2,6 +2,7 @@
 define('scripts/shaders', [
   'libs/gl-matrix-min',
   'text!shaders/copy.frag',
+  'text!shaders/copy_uint.frag',
   'text!shaders/default.vert',
   'text!shaders/find_neighbors.frag',
   'text!shaders/predict_movement.frag',
@@ -13,9 +14,11 @@ define('scripts/shaders', [
   'text!shaders/check_collisions.frag',
   'text!shaders/display/model.vert',
   'text!shaders/display/model.frag',
+  'text!shaders/random/pcg.frag',
 ], function(
   GLMatrix,
   CopyShader,
+  CopyUintShader,
   DefaultVertexShader,
   FindNeighborsShader,
   PredictMovementShader,
@@ -27,6 +30,7 @@ define('scripts/shaders', [
   CheckCollisionsShader,
   ModelVertexShader,
   ModelFragmentShader,
+  RandomShader,
 ) {
   'use strict';
 
@@ -144,6 +148,24 @@ define('scripts/shaders', [
       return shaderProgram;
     }
 
+    // Use the Box-Muller transform to get a normal distribution from the built-in JS uniform
+    // distribution.
+    randNorm(mean, stdev) {
+      let u = 0;
+      let v = 0;
+
+      // Make sure u,v are in (0,1) rather than [0,1)
+      while (u === 0) {
+        u = Math.random();
+      }
+
+      while (v === 0) {
+        v = Math.random();
+      }
+
+      return stdev * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v) + mean;
+    }
+
     initializeAgents() {
       const max_agents = this.agent_width * this.agent_height;
       const agent_array = new Float32Array(max_agents * 4);
@@ -154,10 +176,12 @@ define('scripts/shaders', [
         agent_array[p] = Math.random() * this.region_width;
         velocity_array[p++] = (Math.random() - 0.5) * 4.0;
 
-        agent_array[p] = Math.random() * this.region_height;
+        // agent_array[p] = Math.random() * this.region_height;
+        agent_array[p] = this.randNorm(this.region_height/2, this.region_height/8);
         velocity_array[p++] = (Math.random() - 0.5) * 4.0;
 
         agent_array[p] = Math.random() * this.region_depth;
+        // agent_array[p] = this.randNorm(this.region_width/2, this.region_width/6);
         velocity_array[p++] = (Math.random() - 0.5) * 4.0;
 
         agent_array[p] = 0.0;
@@ -239,8 +263,22 @@ define('scripts/shaders', [
       return [ agent_array, velocity_array ];
     }
 
+    initializeRandomState() {
+      const get_random_int = () => Math.floor(Math.random() * 4294967295);
+
+      const num_entries = this.agent_width * this.agent_height * 4;
+      const random_state = new Uint32Array(num_entries);
+
+      for (let i = 0; i < num_entries; ++i) {
+        random_state[i] = get_random_int();
+      }
+
+      return random_state;
+    }
+
     createAgentTextures() {
-      const [ agent_array, velocity_array ] = this.initializeAgents();
+      const [agent_array, velocity_array] = this.initializeAgents();
+      const random_state = this.initializeRandomState();
 
       this.position_texture = this.loadFloatTexture(this.agent_width, this.agent_height, agent_array);
       this.position_out_texture = this.loadFloatTexture(this.agent_width, this.agent_height, null);
@@ -253,6 +291,10 @@ define('scripts/shaders', [
       this.acceleration_texture = this.loadFloatTexture(this.agent_width, this.agent_height, null);
 
       this.collision_texture = this.loadFloatTexture(this.agent_width, this.agent_height, null);
+
+      this.random_state_in = this.loadUintTexture(this.agent_width, this.agent_height, random_state);
+      this.random_state_out = this.loadUintTexture(this.agent_width, this.agent_height, null);
+      this.random_value = this.loadFloatTexture(this.agent_width, this.agent_height, null);
     }
 
     createNeighborTextures() {
@@ -539,6 +581,39 @@ define('scripts/shaders', [
       info.set_uniforms = set_uniforms;
 
       return info;
+    }
+
+    setupRandom() {
+      const gl = this.gl;
+
+      const uniforms = ['random_state_in'];
+      const out_textures = [this.random_state_out, this.random_value];
+      const set_uniforms = (uniform_locations) => {
+        const gl = this.gl;
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.random_state_in);
+        gl.uniform1i(uniform_locations[0], 0);
+      };
+
+      return this.setupDefault(RandomShader, uniforms, out_textures, set_uniforms);
+    }
+
+    setupCopyRandom() {
+      const gl = this.gl;
+
+      const uniforms = ['original'];
+      const out_textures = [this.random_state_in];
+
+      const set_uniforms = (uniform_locations) => {
+        const gl = this.gl;
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.random_state_out);
+        gl.uniform1i(uniform_locations[0], 0);
+      };
+
+      return this.setupDefault(CopyUintShader, uniforms, out_textures, set_uniforms);
     }
 
     setupNeighbors() {
@@ -945,6 +1020,8 @@ define('scripts/shaders', [
       this.initDisplayVertexBuffer();
 
       this.display_info = this.setupDisplay();
+      this.random_info = this.setupRandom();
+      this.random_copy_info = this.setupCopyRandom();
       this.neighbor_info = this.setupNeighbors();
       this.predict_movement_info = this.setupPredictMovement();
       this.update_acceleration_info = this.setupUpdateAcceleration();
@@ -959,6 +1036,8 @@ define('scripts/shaders', [
 
     runAll() {
       // const arr = new Float32Array(this.agent_width*this.agent_height*4);
+      this.runProgram(this.random_info);
+      this.runProgram(this.random_copy_info);
       this.runProgram(this.neighbor_info);
       this.runProgram(this.predict_movement_info);
       if (this.flocking_interface.int_mpc.checked) {

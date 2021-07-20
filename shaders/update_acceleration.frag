@@ -20,6 +20,8 @@ layout (location = 0) out vec4 acceleration_texture;
 // Hyperparameter for gradient descent
 float gamma = 0.05;
 
+vec3 up = vec3(0.0, 1.0, 0.0);
+
 int neighbors[16];
 
 vec3 walls[6];
@@ -123,6 +125,10 @@ void main() {
             vec3 regularization = a;
             a -= gamma * (100.0*cohesion * aggregation / float(N) - omega * separation + 2.0 * lambda * regularization + alignment / float(N) * velocity);
         }
+
+        // Cost of vertical movement
+        float upness = dot(up, vi);
+        a -= gamma * 2.0 * upness;
 
         vec3 dc = xi - vec3(256.0, 256.0, 256.0);
         center = dc / dot(dc, dc);
