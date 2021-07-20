@@ -103,7 +103,8 @@ void main() {
         vec3 dxij = 2.0 * xij;
 
         // Force due to attraction
-        attraction += (1.0 - log_attraction) * dxij + log_attraction * dxij * invsqdist;
+        // attraction += (1.0 - log_attraction) * dxij + log_attraction * dxij * invsqdist;
+        attraction -= dxij;
         // Force due to repulsion
         repulsion += dxij * sqdist * sqdist;
 
@@ -125,7 +126,7 @@ void main() {
     //     }
     // }
 
-    vec3 a = alignment * ang - cohesion * attraction + omega * repulsion;
+    vec3 a = alignment * ang + 50.0*cohesion * attraction + omega * repulsion;
     if (length(a) > abar) {
         a = normalize(a) * abar;
     }

@@ -102,18 +102,26 @@ void main() {
 
         vec3 xij = xi - xj;
 
-        float rij = dot(vihat, xij);
+        // float rij = dot(vihat, xij);
+        float rij = length(xij);
 
+        float fact = 1.0;
         if (rij > 0.0) {
-            rij = max(rij, 0.1);
+            rij = max(rij, 1.0);
+        // } else {
+        //     fact = -1.0;
+        //     rij = max(-rij, 1.0);
+        // }
 
             float rparinv = 1.0 / rij;
             float parallelmag = apar * pow(rparinv, 13.0) + bpar * pow(rparinv, alpha_par+1.0);
-            parallel += parallelmag * vihat;
+            // parallel += fact*parallelmag * vihat;
+            parallel += parallelmag * normalize(xij);
         }
     }
 
     vi += parallel * dt;
+    vec3 oldvihat = vihat;
     if (vi != vec3(0.0)) {
         vihat = normalize(vi);
     }
@@ -150,11 +158,12 @@ void main() {
         }
     }
 
-    vec3 a = perpendicular + parallel;
+    // vec3 a = perpendicular + parallel;
+    vec3 a = parallel;
 
     if (length(a) > abar) {
         a = normalize(a) * abar;
     }
 
-    acceleration_texture = vec4(a, 0.0);
+    acceleration_texture = vec4(a, 1.0);
 }
