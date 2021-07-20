@@ -24,6 +24,8 @@ define('scripts/interface', [], function() {
       this.center = document.getElementById('param_center');
       this.neighbor_count = document.getElementById('param_neighbor_count');
       this.neighbor_radius = document.getElementById('param_neighbor_radius');
+      this.random_magnitude = document.getElementById('param_random_magnitude');
+      this.vertical_cost = document.getElementById('param_vertical_cost');
 
       this.model_parameters = document.getElementById('model_parameters');
 

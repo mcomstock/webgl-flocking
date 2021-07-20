@@ -682,6 +682,7 @@ define('scripts/shaders', [
         'cohesion',
         'velocity_texture',
         'alignment',
+        'vertical_cost',
       ];
 
       const out_textures = [this.acceleration_texture];
@@ -723,6 +724,7 @@ define('scripts/shaders', [
         gl.uniform1i(uniform_locations[19], 3);
 
         gl.uniform1f(uniform_locations[20], this.flocking_interface.alignment.value);
+        gl.uniform1f(uniform_locations[21], this.flocking_interface.vertical_cost.value);
       };
 
       return this.setupDefault(UpdateAccelerationShader, uniforms, out_textures, set_uniforms);
@@ -893,6 +895,8 @@ define('scripts/shaders', [
         'vbar',
         'num_agents',
         'vmin',
+        'random_texture',
+        'random_magnitude',
       ];
 
       const out_textures = [this.velocity_out_texture];
@@ -912,6 +916,12 @@ define('scripts/shaders', [
         gl.uniform1f(uniform_locations[3], this.flocking_interface.vbar.value);
         gl.uniform1i(uniform_locations[4], this.flocking_interface.number_agents.value);
         gl.uniform1f(uniform_locations[5], this.flocking_interface.vmin.value);
+
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_2D, this.random_value);
+        gl.uniform1i(uniform_locations[6], 2);
+
+        gl.uniform1f(uniform_locations[7], this.flocking_interface.random_magnitude.value);
       };
 
       return this.setupDefault(UpdateVelocityShader, uniforms, out_textures, set_uniforms);
@@ -1047,7 +1057,8 @@ define('scripts/shaders', [
       } else {
         this.runProgram(this.update_acceleration_3_info);
       }
-      // this.getFloatTextureArray(this.position_texture, arr);
+      // this.getFloatTextureArray(this.random_value, arr);
+      // console.log(arr.slice(0,3));
       // console.log(Array.from(arr).filter(x => (x !== x)).length);
       // console.log(Array.from(arr).filter((_,i) => (i%4) !== 0).filter(x => (x !== x)).length);
       // console.log(arr);

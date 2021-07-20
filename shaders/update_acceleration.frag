@@ -10,7 +10,7 @@ uniform sampler2D predicted_position_texture, velocity_texture;
 uniform usampler2D neighbor_texture_0, neighbor_texture_1;
 
 uniform float dt, abar, eta, lambda, omega, cohesion, alignment, region_width, region_height, region_depth, predator_constant;
-uniform float log_attraction, center_pull;
+uniform float log_attraction, center_pull, vertical_cost;
 uniform int num_agents, neighbor_count;
 uniform bool predator_active;
 uniform vec3 predator_position;
@@ -128,7 +128,7 @@ void main() {
 
         // Cost of vertical movement
         float upness = dot(up, vi);
-        a -= gamma * 2.0 * upness;
+        a -= gamma * 2.0 * vertical_cost * upness;
 
         vec3 dc = xi - vec3(256.0, 256.0, 256.0);
         center = dc / dot(dc, dc);

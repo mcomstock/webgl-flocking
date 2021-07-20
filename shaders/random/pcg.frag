@@ -22,22 +22,27 @@ layout (location = 1) out vec4 random_value;
 uint multiplier = 277803737u;
 float uint_max = 4294967295.0;
 
+vec4 results = vec4(0.0);
+
 void main() {
     uvec4 texel = texture(random_state_in, cc);
-    uint oldstate = texel.x;
+    uint state = texel.x;
     uint increment = texel.y;
 
-    uint newstate = oldstate * multiplier + (increment | 1u);
-    uint result = newstate;
+    for (int i = 0; i < 3; ++i) {
+        state = state * multiplier + (increment | 1u);
+        uint result = state;
 
-    uint opbits = 4u;
-    uint mask = 15u;
-    uint rshift = (newstate >> 28u) & mask;
-    result ^= result >> (4u + rshift);
-    result *= multiplier;
-    result ^= result >> ((2u * 32u + 2u) / 3u);
+        uint opbits = 4u;
+        uint mask = 15u;
+        uint rshift = (state >> 28u) & mask;
+        result ^= result >> (4u + rshift);
+        result *= multiplier;
+        result ^= result >> ((2u * 32u + 2u) / 3u);
 
-    random_state_out = uvec4(newstate, increment, 0, 0);
-    random_value = vec4(float(result)/uint_max);
-    // random_value = vec4(float(result));
+        results[i] = float(result);
+    }
+
+    random_state_out = uvec4(state, increment, 0, 0);
+    random_value = results / uint_max;
 }
