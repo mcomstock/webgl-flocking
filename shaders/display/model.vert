@@ -27,13 +27,14 @@ uniform mat4 u_matrix;
 in vec3 position;
 
 out vec3 color;
-out vec3 normal;
+out float intensity;
 
 vec4 offset[12];
 vec3 colors[4];
 vec3 normals[4];
 
 vec3 up = vec3(0.0, 1.0, 0.0);
+vec3 revlightdir = normalize(vec3(0.0, 0.0, 1.0));
 
 void main() {
     offset[0] = BACK1VERT;
@@ -84,5 +85,5 @@ void main() {
 
     gl_Position = u_matrix * world_matrix * offset[vertnum];
     color = colors[vertnum/3];
-    normal = mat3(world_matrix) * normals[vertnum/3];
+    intensity = dot(mat3(world_matrix) * normals[vertnum/3], revlightdir);
 }
