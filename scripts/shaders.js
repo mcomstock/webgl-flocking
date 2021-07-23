@@ -9,6 +9,7 @@ define('scripts/shaders', [
   'text!shaders/update_acceleration.frag',
   'text!shaders/update_acceleration_2.frag',
   'text!shaders/update_acceleration_3.frag',
+  'text!shaders/reynolds_acceleration.frag',
   'text!shaders/update_velocity.frag',
   'text!shaders/update_agent.frag',
   'text!shaders/check_collisions.frag',
@@ -25,6 +26,7 @@ define('scripts/shaders', [
   UpdateAccelerationShader,
   UpdateAccelerationShader2,
   UpdateAccelerationShader3,
+  ReynoldsAccelerationShader,
   UpdateVelocityShader,
   UpdateAgentShader,
   CheckCollisionsShader,
@@ -181,7 +183,7 @@ define('scripts/shaders', [
         velocity_array[p++] = (Math.random() - 0.5) * 4.0;
 
         agent_array[p] = Math.random() * this.region_depth;
-        // agent_array[p] = this.randNorm(this.region_width/2, this.region_width/6);
+        // agent_array[p] = this.randNorm(this.region_width/2, this.region_width/8);
         velocity_array[p++] = (Math.random() - 0.5) * 4.0;
 
         agent_array[p] = 0.0;
@@ -885,6 +887,44 @@ define('scripts/shaders', [
       return this.setupDefault(UpdateAccelerationShader3, uniforms, out_textures, set_uniforms);
     }
 
+    setupReynoldsAcceleration() {
+      const gl = this.gl;
+
+      const uniforms = [
+        'position_texture',
+        'velocity_texture',
+        'neighbor_texture_0',
+        'neighbor_texture_1',
+        'num_agents',
+      ];
+
+      const out_textures = [this.acceleration_texture];
+
+      const set_uniforms = (uniform_locations) => {
+        const gl = this.gl;
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.position_texture);
+        gl.uniform1i(uniform_locations[0], 0);
+
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, this.velocity_texture);
+        gl.uniform1i(uniform_locations[1], 1);
+
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_2D, this.neighbor_texture_0);
+        gl.uniform1i(uniform_locations[2], 2);
+
+        gl.activeTexture(gl.TEXTURE3);
+        gl.bindTexture(gl.TEXTURE_2D, this.neighbor_texture_1);
+        gl.uniform1i(uniform_locations[3], 3);
+
+        gl.uniform1i(uniform_locations[4], this.flocking_interface.number_agents.value);
+      };
+
+      return this.setupDefault(UpdateAccelerationShader, uniforms, out_textures, set_uniforms);
+    }
+
     setupUpdateVelocity() {
       const gl = this.gl;
 
@@ -1037,6 +1077,7 @@ define('scripts/shaders', [
       this.update_acceleration_info = this.setupUpdateAcceleration();
       this.update_acceleration_2_info = this.setupUpdateAcceleration2();
       this.update_acceleration_3_info = this.setupUpdateAcceleration3();
+      this.reynolds_acceleration_info = this.setupReynoldsAcceleration();
       this.update_velocity_info = this.setupUpdateVelocity();
       this.copy_velocity_info = this.setupCopyVelocity();
       this.update_position_info = this.setupUpdatePosition();
@@ -1054,8 +1095,10 @@ define('scripts/shaders', [
         this.runProgram(this.update_acceleration_info);
       } else if (this.flocking_interface.int_sym.checked) {
         this.runProgram(this.update_acceleration_2_info);
-      } else {
+      } else if (this.flocking_interface.int_flav.checked) {
         this.runProgram(this.update_acceleration_3_info);
+      } else {
+        this.runProgram(this.reynolds_acceleration_info);
       }
       // this.getFloatTextureArray(this.random_value, arr);
       // console.log(arr.slice(0,3));

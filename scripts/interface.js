@@ -43,6 +43,7 @@ define('scripts/interface', [], function() {
       this.int_mpc = document.getElementById('int_mpc');
       this.int_sym = document.getElementById('int_sym');
       this.int_flav = document.getElementById('int_flav');
+      this.int_reynolds = document.getElementById('int_reynolds');
 
       this.param_popup_button = document.getElementById('param_popup_button');
       this.param_popup_content = document.getElementById('param_popup_content');
