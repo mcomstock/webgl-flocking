@@ -842,7 +842,7 @@ define('scripts/shaders', [
         const gl = this.gl;
 
         gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, this.position_texture);
+        gl.bindTexture(gl.TEXTURE_2D, this.predicted_position_texture);
         gl.uniform1i(uniform_locations[0], 0);
 
         gl.activeTexture(gl.TEXTURE1);
@@ -1105,10 +1105,10 @@ define('scripts/shaders', [
       // console.log(Array.from(arr).filter(x => (x !== x)).length);
       // console.log(Array.from(arr).filter((_,i) => (i%4) !== 0).filter(x => (x !== x)).length);
       // console.log(arr);
-      this.runProgram(this.update_velocity_info);
-      this.runProgram(this.copy_velocity_info);
       this.runProgram(this.update_position_info);
       this.runProgram(this.copy_position_info);
+      this.runProgram(this.update_velocity_info);
+      this.runProgram(this.copy_velocity_info);
       this.runProgram(this.check_collisions_info);
 
       this.runDisplay(this.display_info);
