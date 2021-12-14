@@ -176,8 +176,8 @@ define('scripts/shaders', [
       let p = 0;
       for (let i = 0; i < max_agents; ++i) {
         agent_array[p] = Math.random() * this.region_width;
-        // velocity_array[p++] = (Math.random() - 0.5) * 4.0;
-        velocity_array[p++] = (Math.random()) * 4.0;
+        velocity_array[p++] = (Math.random() - 0.5) * 4.0;
+        // velocity_array[p++] = (Math.random()) * 4.0;
 
         // agent_array[p] = Math.random() * this.region_height;
         agent_array[p] = this.randNorm(this.region_height/2, this.region_height/8);
@@ -185,8 +185,8 @@ define('scripts/shaders', [
 
         agent_array[p] = Math.random() * this.region_depth;
         // agent_array[p] = this.randNorm(this.region_width/2, this.region_width/8);
-        // velocity_array[p++] = (Math.random() - 0.5) * 4.0;
-        velocity_array[p++] = (Math.random()) * 4.0;
+        velocity_array[p++] = (Math.random() - 0.5) * 4.0;
+        // velocity_array[p++] = (Math.random()) * 4.0;
 
         agent_array[p] = 0.0;
         velocity_array[p++] = 0.0;
