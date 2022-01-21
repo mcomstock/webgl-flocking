@@ -70,9 +70,8 @@ void main() {
     walls[4] = vec3(xi.x, xi.y, 0.0);
     walls[5] = vec3(xi.x, xi.y, region_depth);
 
-    vec3 attraction = vec3(0.0);
-    vec3 repulsion = vec3(0.0);
-    vec3 ang = vec3(0.0);
+    vec3 potential = vec3(0.0);
+    vec3 alignment = vec3(0.0);
 
     int N = 0;
     for (int n = 0; n < neighbors_to_check; ++n) {
@@ -95,24 +94,19 @@ void main() {
         ++N;
 
         // Vector and squared distance from neighbor to self
-        vec3 xij = xi - xj;
+        vec3 xij = xj - xi;
         float sqdist = dot(xij, xij);
-        float invsqdist = 1.0 / sqdist;
+        float dist = sqrt(sqdist);
 
-        // Chain rule term d/dxij(||xij||^2) = d/dxij(xij*xij)
-        vec3 dxij = 2.0 * xij;
+        float ap = 7.0, bp = 3.0, cp = 0.5, dp = 1.0, ep = 0.5;
+        float farcosh = cosh(dp * (dist - ap));
+        float nearcosh = cosh(ep * (dist - bp));
 
-        // Force due to attraction
-        // attraction += (1.0 - log_attraction) * dxij + log_attraction * dxij * invsqdist;
-        attraction -= dxij;
-        // Force due to repulsion
-        repulsion += dxij * sqdist * sqdist;
+        // Force due to potential function
+        potential -= (cp * dp * 0.5 / (farcosh*farcosh) - ep * 0.5 / (nearcosh*nearcosh)) * xij;
 
-        // Angular alignment force
-        vec3 vixvj = cross(vi, vj);
-        if (vi != vec3(0.0) && vixvj != vec3(0.0)) {
-            ang += invsqdist * (1.0 - dot(normalize(vi), vj)) * normalize(cross(vi, vixvj));
-        }
+        // Force due to alignment
+        alignment += vj - vi;
     }
 
     // vec3 wall = vec3(0.0);
@@ -126,10 +120,15 @@ void main() {
     //     }
     // }
 
-    vec3 a = alignment * ang + 50.0*cohesion * attraction + omega * repulsion;
-    if (length(a) > abar) {
-        a = normalize(a) * abar;
+    if (N == 0) {
+        acceleration_texture = vec4(0.0);
+        return;
     }
+
+    vec3 a = 0.5*potential + alignment/float(N);
+    // if (length(a) > abar) {
+    //     a = normalize(a) * abar;
+    // }
 
     acceleration_texture = vec4(a, 0.0);
 }
