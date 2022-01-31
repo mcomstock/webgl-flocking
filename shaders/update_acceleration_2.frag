@@ -12,8 +12,6 @@ uniform usampler2D neighbor_texture_0, neighbor_texture_1;
 uniform float dt, abar, region_width, region_depth, region_height, potential_dist,
     alignment_weight, potential_weight, vertical_weight;
 uniform int num_agents, neighbor_count;
-uniform bool predator_active;
-uniform vec3 predator_position;
 
 layout (location = 0) out vec4 acceleration_texture;
 

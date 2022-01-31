@@ -9,11 +9,9 @@ in vec2 cc;
 uniform sampler2D predicted_position_texture, velocity_texture;
 uniform usampler2D neighbor_texture_0, neighbor_texture_1;
 
-uniform float dt, abar, eta, lambda, omega, cohesion, alignment, region_width, region_height, region_depth, predator_constant;
-uniform float log_attraction, center_pull, vertical_cost;
+uniform float dt, abar, lambda, omega, cohesion, alignment, region_width, region_height, region_depth;
+uniform float vertical_cost;
 uniform int num_agents, neighbor_count;
-uniform bool predator_active;
-uniform vec3 predator_position;
 
 layout (location = 0) out vec4 acceleration_texture;
 
@@ -64,8 +62,6 @@ void main() {
     int neighbors_to_check = min(neighbor_count, neighbors.length());
     int num_walls = walls.length();
 
-    vec3 predator = predator_position.xyz * vec3(region_width, region_height, region_depth);
-
     // Use gradient descent to find the acceleration
     vec3 a = vec3(0.0);
     for (int i = 0; i < 1000; ++i) {
@@ -85,7 +81,6 @@ void main() {
         vec3 aggregation = vec3(0.0);
         vec3 separation = vec3(0.0);
         vec3 velocity = vec3(0.0);
-        vec3 center = vec3(0.0);
         int N = 0;
         for (int n = 0; n < neighbors_to_check; ++n) {
             if (neighbors[n] >= num_agents) {
@@ -113,11 +108,8 @@ void main() {
 
             vec3 dxij = 2.0 * xij * dt * dt;
 
-            aggregation += (1.0 - log_attraction) * dxij;
-            aggregation += log_attraction * 20.0 * dxij / sqdist;
-
+            aggregation += dxij;
             separation += dxij / (sqdist * sqdist);
-
             velocity += 2.0 * (vi - vj) * dt;
         }
 
@@ -130,18 +122,12 @@ void main() {
         float upness = dot(up, vi);
         a -= gamma * 2.0 * vertical_cost * upness;
 
-        vec3 dc = xi - vec3(256.0, 256.0, 256.0);
-        center = dc / dot(dc, dc);
-
-        a -= gamma * center_pull * center;
-
-        // Avoid the walls if too close
         for (int w = 0; w < num_walls; ++w) {
             vec3 w_dist = xi - walls[w];
             float sq_w_dist = dot(w_dist, w_dist);
 
             if (sq_w_dist < sq_wall_dist_range) {
-                a += gamma * 10000.0*predator_constant * 2.0 * w_dist * dt * dt / (sq_w_dist * sq_w_dist);
+                a += gamma * 10000.0 * 2.0 * w_dist * dt * dt / (sq_w_dist * sq_w_dist);
             }
         }
 

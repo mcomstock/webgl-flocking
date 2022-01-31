@@ -31,7 +31,6 @@ define('scripts/interface', [], function() {
       this.pot_vertical_weight = document.getElementById('param_pot_vertical_weight');
       this.pot_potential_dist = document.getElementById('param_pot_potential_dist');
 
-      this.log_attraction = document.getElementById('log_attraction');
       this.pause = document.getElementById('toggle_pause');
       this.toggle_parameters = document.getElementById('toggle_parameters');
 

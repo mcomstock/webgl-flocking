@@ -41,9 +41,6 @@ define('scripts/shaders', [
       this.region_width = 75;
       this.region_height = 75;
       this.region_depth = 75;
-      // this.region_width = 25;
-      // this.region_height = 25;
-      // this.region_depth = 25;
 
       // Shader code depends on these specific values
       this.agent_width = 64;
@@ -170,79 +167,15 @@ define('scripts/shaders', [
       for (let i = 0; i < max_agents; ++i) {
         agent_array[p] = 10 + Math.random() * (this.region_width - 20);
         velocity_array[p++] = (Math.random() - 0.5) * 4.0;
-        // velocity_array[p++] = (Math.random()) * 4.0;
 
-        // agent_array[p] = Math.random() * this.region_height;
         agent_array[p] = this.randNorm(this.region_height/2, this.region_height/8);
         velocity_array[p++] = (Math.random() - 0.5) * 4.0;
 
         agent_array[p] = 10 + Math.random() * (this.region_depth - 20);
-        // agent_array[p] = this.randNorm(this.region_width/2, this.region_width/8);
         velocity_array[p++] = (Math.random() - 0.5) * 4.0;
-        // velocity_array[p++] = (Math.random()) * 4.0;
 
         agent_array[p] = 0.0;
         velocity_array[p++] = 0.0;
-
-        // agent_array[p] = Math.random() * this.region_width;
-        // velocity_array[p++] = Math.random() * 4.0;
-
-        // agent_array[p] = Math.random() * this.region_height;
-        // velocity_array[p++] = Math.random() * 4.0;
-
-        // agent_array[p] = Math.random() * this.region_depth;
-        // velocity_array[p++] = Math.random() * 4.0;
-
-        // agent_array[p] = 0.0;
-        // velocity_array[p++] = 0.0;
-
-        // agent_array[p] = Math.random() * this.region_width;
-        // velocity_array[p++] = (Math.random() - 0.5) * 4.0;
-
-        // agent_array[p] = Math.random() * this.region_height;
-        // velocity_array[p++] = (Math.random() - 0.5) * 4.0;
-
-        // agent_array[p] = 0.5 * this.region_depth;
-        // velocity_array[p++] = 0.0;
-
-        // agent_array[p] = 0.0;
-        // velocity_array[p++] = 0.0;
-
-        // agent_array[p] = 0.25*this.region_width + Math.random() * 0.5*this.region_width;
-        // velocity_array[p++] = 3.0 + 0.2*Math.random();
-
-        // agent_array[p] = 0.25*this.region_width + Math.random() * 0.5*this.region_height;
-        // velocity_array[p++] = 3.0 + 0.2*Math.random();
-
-        // agent_array[p] = 0.5 * this.region_depth;
-        // velocity_array[p++] = 0.0;
-
-        // agent_array[p] = 0.0;
-        // velocity_array[p++] = 0.0;
-
-        // agent_array[p] = Math.random() * this.region_width;
-        // velocity_array[p++] = 1.0 + 0.2*Math.random() / 4;
-
-        // agent_array[p] = Math.random() * this.region_height / 4;
-        // velocity_array[p++] = 1.0 + 0.2*Math.random();
-
-        // agent_array[p] = Math.random() * this.region_depth / 4;
-        // velocity_array[p++] = 1.0 + 0.2*Math.random();
-
-        // agent_array[p] = 0.0;
-        // velocity_array[p++] = 0.0;
-
-        // agent_array[p] = i;
-        // velocity_array[p++] = 1.0;
-
-        // agent_array[p] = 0.5 * this.region_height;
-        // velocity_array[p++] = 0;
-
-        // agent_array[p] = 0.5 * this.region_depth;
-        // velocity_array[p++] = 0;
-
-        // agent_array[p] = 0;
-        // velocity_array[p++] = 0;
 
         // agent_array[p] = (i % 3);
         // velocity_array[p++] = 1.0;
@@ -669,7 +602,6 @@ define('scripts/shaders', [
         'abar',
         'lambda',
         'omega',
-        'log_attraction',
         'neighbor_count',
         'cohesion',
         'velocity_texture',
@@ -702,16 +634,15 @@ define('scripts/shaders', [
         gl.uniform1f(uniform_locations[8], this.flocking_interface.abar.value);
         gl.uniform1f(uniform_locations[9], this.flocking_interface.lambda.value);
         gl.uniform1f(uniform_locations[10], this.flocking_interface.omega.value);
-        gl.uniform1f(uniform_locations[11], this.flocking_interface.log_attraction.checked ? 1.0 : 0.0);
-        gl.uniform1i(uniform_locations[12], this.flocking_interface.neighbor_count.value);
-        gl.uniform1f(uniform_locations[13], this.flocking_interface.cohesion.value);
+        gl.uniform1i(uniform_locations[11], this.flocking_interface.neighbor_count.value);
+        gl.uniform1f(uniform_locations[12], this.flocking_interface.cohesion.value);
 
         gl.activeTexture(gl.TEXTURE3);
         gl.bindTexture(gl.TEXTURE_2D, this.velocity_texture);
-        gl.uniform1i(uniform_locations[14], 3);
+        gl.uniform1i(uniform_locations[13], 3);
 
-        gl.uniform1f(uniform_locations[15], this.flocking_interface.alignment.value);
-        gl.uniform1f(uniform_locations[16], this.flocking_interface.vertical_cost.value);
+        gl.uniform1f(uniform_locations[14], this.flocking_interface.alignment.value);
+        gl.uniform1f(uniform_locations[15], this.flocking_interface.vertical_cost.value);
       };
 
       return this.setupDefault(UpdateAccelerationShader, uniforms, out_textures, set_uniforms);
