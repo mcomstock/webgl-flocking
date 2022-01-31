@@ -36,6 +36,10 @@ body {
   visibility: visible;
 }
 
+.hidden {
+  display: none;
+}
+
 #display_canvas_div {
   height: 100%;
   width: 100%;

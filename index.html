@@ -20,14 +20,8 @@
           <input type="radio" id="int_mpc" name="int_type" value="mpc" checked>
           <label for="int_mpc">MPC</label>
           <br>
-          <input type="radio" id="int_sym" name="int_type" value="sym">
-          <label for="int_sym">Symmetric potential function</label>
-          <br>
-          <input type="radio" id="int_flav" name="int_type" value="flav">
-          <label for="int_flav">Flavio's potential function</label>
-          <br>
-          <input type="radio" id="int_reynolds" name="int_type" value="reynolds">
-          <label for="int_flav">Reynolds model</label>
+          <input type="radio" id="int_pot" name="int_type" value="sym">
+          <label for="int_pot">Potential function</label>
         </div>
         <div id="model_parameters" class="param_div">
           <label for="param_dt">dt</label>
@@ -50,11 +44,22 @@
           <input id="param_abar" type="range" min="0.1" max="10" step="0.1" value="1">
           <span class="max">10</span>
 
-          <label for="param_eta">Eta (not implemented yet)</label>
-          <span class="min">1</span>
-          <input id="param_eta" type="range" min="1" max="3" step="1" value="1">
-          <span class="max">3</span>
+          <label for="param_neighbor_count">Max neighbor count</label>
+          <span class="min">0</span>
+          <input id="param_neighbor_count" type="range" min="0" max="16" step="1" value="7">
+          <span class="max">16</span>
 
+          <label for="param_neighbor_radius">Max neighbor radius</label>
+          <span class="min">0</span>
+          <input id="param_neighbor_radius" type="range" min="0" max="100" step="0.1" value="8.4">
+          <span class="max">100</span>
+
+          <label for="param_random_magnitude">Noise magnitude</label>
+          <span class="min">0</span>
+          <input id="param_random_magnitude" type="range" min="0" max="8" step="0.1" value="1.0">
+          <span class="max">8</span>
+        </div>
+        <div id="mpc_parameters" class="param_div hidden">
           <label for="param_lambda">Acceleration cost factor</label>
           <span class="min">0</span>
           <input id="param_lambda" type="range" min="0" max="2" step="0.1" value="1">
@@ -75,65 +80,31 @@
           <input id="param_alignment" type="range" min="0" max="10" step="0.1" value="1">
           <span class="max">10</span>
 
-          <label for="param_epsilon_par">Parallel epsilon</label>
-          <span class="min">1</span>
-          <input id="param_epsilon_par" type="range" min="1" max="5" step="0.1" value="2">
-          <span class="max">5</span>
-
-          <label for="param_sigma_par">Parallel sigma</label>
-          <span class="min">1</span>
-          <input id="param_sigma_par" type="range" min="1" max="10" step="0.1" value="6">
-          <span class="max">10</span>
-
-          <label for="param_alpha_par">Parallel alpha</label>
-          <span class="min">1</span>
-          <input id="param_alpha_par" type="range" min="1" max="6" step="1" value="3">
-          <span class="max">6</span>
-
-          <label for="param_epsilon_perp">Perpendicular epsilon</label>
-          <span class="min">1</span>
-          <input id="param_epsilon_perp" type="range" min="1" max="5" step="0.1" value="2">
-          <span class="max">5</span>
-
-          <label for="param_sigma_perp">Perpendicular sigma</label>
-          <span class="min">1</span>
-          <input id="param_sigma_perp" type="range" min="1" max="10" step="0.1" value="2">
-          <span class="max">10</span>
-
-          <label for="param_alpha_perp">Perpendicular alpha</label>
-          <span class="min">1</span>
-          <input id="param_alpha_perp" type="range" min="1" max="6" step="1" value="5">
-          <span class="max">6</span>
-
-          <label for="param_predator_constant">Predator cost factor</label>
-          <span class="min">0</span>
-          <input id="param_predator_constant" type="range" min="0" max="10" step="0.1" value="1">
-          <span class="max">10</span>
-
-          <label for="param_center">Pull to center</label>
-          <span class="min">0</span>
-          <input id="param_center" type="range" min="0" max="10" value="0">
-          <span class="max">10</span>
-
-          <label for="param_neighbor_count">Max neighbor count</label>
-          <span class="min">0</span>
-          <input id="param_neighbor_count" type="range" min="0" max="16" step="1" value="7">
-          <span class="max">16</span>
-
-          <label for="param_neighbor_radius">Max neighbor radius</label>
-          <span class="min">0</span>
-          <input id="param_neighbor_radius" type="range" min="0" max="100" step="0.1" value="8.4">
-          <span class="max">100</span>
-
-          <label for="param_random_magnitude">Noise magnitude</label>
-          <span class="min">0</span>
-          <input id="param_random_magnitude" type="range" min="0" max="8" step="0.1" value="1.0">
-          <span class="max">8</span>
-
           <label for="param_vertical_cost">Vertical movement cost</label>
           <span class="min">0</span>
           <input id="param_vertical_cost" type="range" min="0" max="2" step="0.1" value="0.2">
           <span class="max">2</span>
+        </div>
+        <div id="pot_parameters" class="param_div hidden">
+          <label for="param_pot_alignment_weight">Alignment weight</label>
+          <span class="min">0</span>
+          <input id="param_pot_alignment_weight" type="range" min="0" max="2" step="0.1" value="1.0">
+          <span class="max">2</span>
+
+          <label for="param_pot_potential_weight">Potential weight</label>
+          <span class="min">0</span>
+          <input id="param_pot_potential_weight" type="range" min="0" max="2" step="0.1" value="0.2">
+          <span class="max">2</span>
+
+          <label for="param_pot_vertical_weight">Leveling weight</label>
+          <span class="min">0</span>
+          <input id="param_pot_vertical_weight" type="range" min="0" max="2" step="0.1" value="0.2">
+          <span class="max">2</span>
+
+          <label for="param_pot_potential_dist">Potential well distance</label>
+          <span class="min">0</span>
+          <input id="param_pot_potential_dist" type="range" min="0" max="10" step="0.1" value="5.0">
+          <span class="max">10</span>
         </div>
         <div id="toggle_parameters">
           <label for="log_attraction">Logarithmic attraction</label>

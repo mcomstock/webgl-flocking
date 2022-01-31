@@ -38,9 +38,11 @@ require([
 
   flocking_interface.restart_button.addEventListener('click', initializeShaders);
   flocking_interface.param_popup_button.addEventListener('click', () => flocking_interface.togglePopup());
+  flocking_interface.interaction_type.addEventListener('click', () => flocking_interface.updateParameterView());
   window.onresize = () => flocking_interface.updateView();
 
   flocking_interface.updateView();
+  flocking_interface.updateParameterView();
   initializeShaders();
   run();
 });

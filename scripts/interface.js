@@ -15,7 +15,6 @@ define('scripts/interface', [], function() {
       this.vmin = document.getElementById('param_vmin');
       this.vbar = document.getElementById('param_vbar');
       this.abar = document.getElementById('param_abar');
-      this.eta = document.getElementById('param_eta');
       this.lambda = document.getElementById('param_lambda');
       this.omega = document.getElementById('param_omega');
       this.cohesion = document.getElementById('param_cohesion');
@@ -27,23 +26,21 @@ define('scripts/interface', [], function() {
       this.random_magnitude = document.getElementById('param_random_magnitude');
       this.vertical_cost = document.getElementById('param_vertical_cost');
 
-      this.model_parameters = document.getElementById('model_parameters');
+      this.pot_alignment_weight = document.getElementById('param_pot_alignment_weight');
+      this.pot_potential_weight = document.getElementById('param_pot_potential_weight');
+      this.pot_vertical_weight = document.getElementById('param_pot_vertical_weight');
+      this.pot_potential_dist = document.getElementById('param_pot_potential_dist');
 
       this.log_attraction = document.getElementById('log_attraction');
       this.pause = document.getElementById('toggle_pause');
       this.toggle_parameters = document.getElementById('toggle_parameters');
 
-      this.epsilon_par = document.getElementById('param_epsilon_par');
-      this.sigma_par = document.getElementById('param_sigma_par');
-      this.alpha_par = document.getElementById('param_alpha_par');
-      this.epsilon_perp = document.getElementById('param_epsilon_perp');
-      this.sigma_perp = document.getElementById('param_sigma_perp');
-      this.alpha_perp = document.getElementById('param_alpha_perp');
-
+      this.interaction_type = document.getElementById('interaction_type');
       this.int_mpc = document.getElementById('int_mpc');
-      this.int_sym = document.getElementById('int_sym');
-      this.int_flav = document.getElementById('int_flav');
-      this.int_reynolds = document.getElementById('int_reynolds');
+      this.int_pot = document.getElementById('int_pot');
+
+      this.mpc_parameters = document.getElementById('mpc_parameters');
+      this.pot_parameters = document.getElementById('pot_parameters');
 
       this.param_popup_button = document.getElementById('param_popup_button');
       this.param_popup_content = document.getElementById('param_popup_content');
@@ -65,6 +62,20 @@ define('scripts/interface', [], function() {
 
     togglePopup() {
       this.param_popup_content.classList.toggle('show');
+    }
+
+    updateParameterView() {
+      if (this.int_mpc.checked) {
+        this.mpc_parameters.classList.remove('hidden');
+      } else {
+        this.mpc_parameters.classList.add('hidden');
+      }
+
+      if (this.int_pot.checked) {
+        this.pot_parameters.classList.remove('hidden');
+      } else {
+        this.pot_parameters.classList.add('hidden');
+      }
     }
   };
 });

@@ -9,11 +9,8 @@ in vec2 cc;
 uniform sampler2D position_texture, velocity_texture;
 uniform usampler2D neighbor_texture_0, neighbor_texture_1;
 
-// Don't use these
-uniform float eta, lambda, center_pull;
-// Use these
-uniform float dt, abar, omega, cohesion, region_width, region_depth, region_height,
-    predator_constant, log_attraction, alignment;
+uniform float dt, abar, region_width, region_depth, region_height, potential_dist,
+    alignment_weight, potential_weight, vertical_weight;
 uniform int num_agents, neighbor_count;
 uniform bool predator_active;
 uniform vec3 predator_position;
@@ -24,8 +21,7 @@ int neighbors[16];
 vec3 walls[6];
 
 // The squared distance at which to start caring about walls
-// float sq_wall_dist_range = 5.0 * 5.0;
-float sq_wall_dist_range = 100000000.0;
+// float sq_wall_dist_range = 25.0;
 
 void main() {
     int current_agent_x = int(floor(cc.x * 64.0));
@@ -33,6 +29,7 @@ void main() {
     int current_agent_idx = 64 * current_agent_y + current_agent_x;
 
     if (current_agent_idx >= num_agents) {
+        acceleration_texture = vec4(0.0, 0.0, 0.0, vertical_weight);
         return;
     }
 
@@ -93,19 +90,11 @@ void main() {
 
         ++N;
 
-        // Vector and squared distance from neighbor to self
+        // xi + xij = xj
         vec3 xij = xj - xi;
-        float sqdist = dot(xij, xij);
-        float dist = sqrt(sqdist);
+        float dist = length(xij);
 
-        float ap = 7.0, bp = 3.0, cp = 0.5, dp = 1.0, ep = 0.5;
-        float farcosh = cosh(dp * (dist - ap));
-        float nearcosh = cosh(ep * (dist - bp));
-
-        // Force due to potential function
-        potential -= (cp * dp * 0.5 / (farcosh*farcosh) - ep * 0.5 / (nearcosh*nearcosh)) * xij;
-
-        // Force due to alignment
+        potential = 2.0 * (dist - potential_dist) * normalize(xij);
         alignment += vj - vi;
     }
 
@@ -120,15 +109,20 @@ void main() {
     //     }
     // }
 
+    vec3 vert = vec3(0.0, -vi.y, 0.0);
+
     if (N == 0) {
-        acceleration_texture = vec4(0.0);
+        acceleration_texture = vec4(0.0, 0.0, 0.0, vertical_weight);
         return;
     }
 
-    vec3 a = 0.5*potential + alignment/float(N);
-    // if (length(a) > abar) {
-    //     a = normalize(a) * abar;
-    // }
+    vec3 a = vertical_weight * vert
+        + potential_weight * potential
+        + alignment_weight * alignment / float(N);
 
-    acceleration_texture = vec4(a, 0.0);
+    if (length(a) > abar) {
+        a = normalize(a) * abar;
+    }
+
+    acceleration_texture = vec4(a, vertical_weight);
 }
