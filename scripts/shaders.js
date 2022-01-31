@@ -923,7 +923,6 @@ define('scripts/shaders', [
       }
       // this.getFloatTextureArray(this.position_out_texture, arr);
       // console.log(arr[3]);
-      console.log(this.flocking_interface.pot_vertical_weight);
       this.runProgram(this.update_position_info);
       this.runProgram(this.copy_position_info);
       this.runProgram(this.update_velocity_info);
