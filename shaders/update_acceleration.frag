@@ -84,7 +84,8 @@ void main() {
         int N = 0;
         for (int n = 0; n < neighbors_to_check; ++n) {
             if (neighbors[n] >= num_agents) {
-                // TODO should this be continue?
+                // The only way this condition will occur is if there aren't any more neighbors in
+                // the radius, so stop now.
                 break;
             }
 

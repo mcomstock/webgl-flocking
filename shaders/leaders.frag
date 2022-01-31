@@ -54,6 +54,9 @@ void main() {
 
     uint is_leader = 1u;
     for (int i = 0; i < neighbors_to_check; ++i) {
+        if (neighbors[i] >= num_agents) {
+            break;
+        }
         int ind_x = neighbors[i] & 63;
         int ind_y = neighbors[i] >> 6;
         vec3 nx = texelFetch(position_texture, ivec2(ind_x, ind_y), 0).xyz;

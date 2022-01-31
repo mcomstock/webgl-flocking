@@ -71,7 +71,7 @@ void main() {
     int N = 0;
     for (int n = 0; n < neighbors_to_check; ++n) {
         if (neighbors[n] >= num_agents) {
-            continue;
+            break;
         }
 
         // % 64
