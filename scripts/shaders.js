@@ -5,6 +5,7 @@ define('scripts/shaders', [
   'text!shaders/copy_uint.frag',
   'text!shaders/default.vert',
   'text!shaders/find_neighbors.frag',
+  'text!shaders/leaders.frag',
   'text!shaders/predict_movement.frag',
   'text!shaders/update_acceleration.frag',
   'text!shaders/update_acceleration_2.frag',
@@ -20,6 +21,7 @@ define('scripts/shaders', [
   CopyUintShader,
   DefaultVertexShader,
   FindNeighborsShader,
+  LeaderShader,
   PredictMovementShader,
   UpdateAccelerationShader,
   UpdateAccelerationShader2,
@@ -221,6 +223,7 @@ define('scripts/shaders', [
       this.acceleration_texture = this.loadFloatTexture(this.agent_width, this.agent_height, null);
 
       this.collision_texture = this.loadFloatTexture(this.agent_width, this.agent_height, null);
+      this.leader_texture = this.loadUintTexture(this.agent_width, this.agent_height, null);
 
       this.random_state_in = this.loadUintTexture(this.agent_width, this.agent_height, random_state);
       this.random_state_out = this.loadUintTexture(this.agent_width, this.agent_height, null);
@@ -475,7 +478,7 @@ define('scripts/shaders', [
 
       const info = {};
 
-      const uniforms = ['position_texture', 'velocity_texture', 'u_matrix'];
+      const uniforms = ['position_texture', 'velocity_texture', 'leader_texture', 'u_matrix'];
 
       info.program = this.loadShaderProgram(ModelVertexShader, ModelFragmentShader);
       gl.useProgram(info.program);
@@ -490,7 +493,11 @@ define('scripts/shaders', [
         gl.bindTexture(gl.TEXTURE_2D, this.velocity_texture);
         gl.uniform1i(uniform_locations[1], 1);
 
-        gl.uniformMatrix4fv(uniform_locations[2], false, u_matrix);
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_2D, this.leader_texture);
+        gl.uniform1i(uniform_locations[2], 2);
+
+        gl.uniformMatrix4fv(uniform_locations[3], false, u_matrix);
       };
 
       return info;
@@ -511,6 +518,44 @@ define('scripts/shaders', [
       info.set_uniforms = set_uniforms;
 
       return info;
+    }
+
+    setupLeaders() {
+      const gl = this.gl;
+
+      const uniforms = [
+        'position_texture',
+        'velocity_texture',
+        'neighbor_texture_0',
+        'neighbor_texture_1',
+        'num_agents',
+        'neighbor_count',
+      ];
+      const out_textures = [this.leader_texture];
+      const set_uniforms = (uniform_locations) => {
+        const gl = this.gl;
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.position_texture);
+        gl.uniform1i(uniform_locations[0], 0);
+
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, this.velocity_texture);
+        gl.uniform1i(uniform_locations[1], 1);
+
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_2D, this.neighbor_texture_0);
+        gl.uniform1i(uniform_locations[2], 2);
+
+        gl.activeTexture(gl.TEXTURE3);
+        gl.bindTexture(gl.TEXTURE_2D, this.neighbor_texture_1);
+        gl.uniform1i(uniform_locations[3], 3);
+
+        gl.uniform1i(uniform_locations[4], this.flocking_interface.number_agents.value);
+        gl.uniform1i(uniform_locations[5], this.flocking_interface.neighbor_count.value);
+      };
+
+      return this.setupDefault(LeaderShader, uniforms, out_textures, set_uniforms);
     }
 
     setupRandom() {
@@ -862,6 +907,7 @@ define('scripts/shaders', [
       this.update_position_info = this.setupUpdatePosition();
       this.copy_position_info = this.setupCopyPosition();
       this.check_collisions_info = this.setupCheckCollisions();
+      this.leader_info = this.setupLeaders();
     }
 
     runAll() {
@@ -883,6 +929,7 @@ define('scripts/shaders', [
       this.runProgram(this.update_velocity_info);
       this.runProgram(this.copy_velocity_info);
       this.runProgram(this.check_collisions_info);
+      this.runProgram(this.leader_info);
 
       this.runDisplay(this.display_info);
     }

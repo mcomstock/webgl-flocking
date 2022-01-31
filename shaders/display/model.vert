@@ -2,6 +2,8 @@
 
 precision highp float;
 precision highp int;
+precision highp sampler2D;
+precision highp usampler2D;
 
 #define HALFLENGTH 0.1
 #define HALFBASE 0.05
@@ -22,6 +24,7 @@ vec4 BACK3VERT = vec4(-HALFLENGTH, BACKBOT, HALFBASE, 1.0);
 //                              +y  +z
 
 uniform sampler2D position_texture, velocity_texture;
+uniform usampler2D leader_texture;
 uniform mat4 u_matrix;
 
 in vec3 position;
@@ -30,7 +33,6 @@ out vec3 color;
 out float intensity;
 
 vec4 offset[12];
-vec3 colors[4];
 vec3 normals[4];
 
 vec3 up = vec3(0.0, 1.0, 0.0);
@@ -58,14 +60,10 @@ void main() {
     normals[2] = normalize(cross(normalize((offset[7] - offset[6]).xyz), (normalize(offset[8] - offset[7]).xyz)));
     normals[3] = normalize(cross(normalize((offset[10] - offset[9]).xyz), (normalize(offset[11] - offset[10]).xyz)));
 
-    colors[0] = vec3(1.0, 0.0, 0.0);
-    colors[1] = vec3(0.0, 1.0, 0.0);
-    colors[2] = vec3(0.0, 0.0, 1.0);
-    colors[3] = vec3(1.0, 1.0, 0.0);
-
     int vertnum = int(position.z);
     vec4 pos = vec4(texture(position_texture, position.xy).xyz, 1.0);
     vec4 vel = texture(velocity_texture, position.xy);
+    uint is_leader = texture(leader_texture, position.xy).x;
 
     vec4 lookx = vec4(normalize(vel.xyz), 0.0);
     vec4 lookz = vec4(normalize(cross(lookx.xyz, up)), 0.0);
@@ -84,6 +82,11 @@ void main() {
     );
 
     gl_Position = u_matrix * world_matrix * offset[vertnum];
-    color = colors[vertnum/3];
+    color = vec3(0.9, 0.9, 0.9);
     intensity = dot(mat3(world_matrix) * normals[vertnum/3], revlightdir);
+
+    if (is_leader != 0u) {
+        color = vec3(0.9, 0.0, 0.0);
+        intensity = 1.0;
+    }
 }
